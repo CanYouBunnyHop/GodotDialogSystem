@@ -24,7 +24,7 @@ func _ready():
 	conditionRegex.compile(r'(?<Condition>(?<Subject>[a-zA-Z]+)\s+(?:(?<IntCom>==|!=|<|<=|>|>=)\s+(?<IntObj>\d+|)|(?<BoolCom>is|is_not)\s+(?<BoolObj>true|false|[a-zA-Z]+)))(?:\s+(?<Keyword>and|or)|)(?(Keyword)(?<ConditionB>\s+(?&Condition)))\s*\?')
 	statementRegex.compile(r'(?<Statement>then:\s*(?<Target>[a-zA-z]+)\s+(?:(?<IntOp>=|\+=|-=|\*=|\/=)\s*(?<IntVal>\d+|[a-zA-z]+)|(?<BoolOp>is|is_not)\s+(?<BoolVal>true|false|[a-zA-z]+)))')
 	jumpRegex.compile(r'')
-	handle_input("if: a is true ? then: b is false; else: b is true")
+	handle_input("if: a is true ? then: b is false; else: then: b is true")
 	
 static func handle_input(_inputFull : String):
 	var commandInputs = _inputFull.split(",", false)
@@ -36,45 +36,61 @@ func print_something(_arg:String): #for testing
 	print(_arg)
 	
 static func read_condition(step:String)-> bool:
-	var subject
-	var comparator
-	var object
-	var type
-	var condition = conditionRegex.search(step)
+	var conditionA = conditionRegex.search(step)
 	var finalResults : Array = []
-	#ConA
-	subject = condition.get_string("Subject")
-	if !condition.get_string("IntCom").is_empty():
-		comparator = condition.get_string("IntCom")
-		object = condition.get_string("IntObj")
-		type = TYPE_INT
-	elif !condition.get_string("BoolCom").is_empty():
-		comparator = condition.get_string("BoolCom")
-		object = condition.get_string("BoolObj")
-		type = TYPE_BOOL
-	var result = func condition_result(_subject:String, _comparator:String, _object:String, _type:Variant.Type) -> bool:
-		var sub = Global_Data.get_data(_subject, _type)
+	#var subject
+	#var comparator
+	#var object
+	#var type
+	#
+	#var condition = conditionRegex.search(step)
+	#var finalResults : Array = []
+	##ConA
+	#subject = condition.get_string("Subject")
+	#if !condition.get_string("IntCom").is_empty():
+		#comparator = condition.get_string("IntCom")
+		#object = condition.get_string("IntObj")
+		#type = TYPE_INT
+	#elif !condition.get_string("BoolCom").is_empty():
+		#comparator = condition.get_string("BoolCom")
+		#object = condition.get_string("BoolObj")
+		#type = TYPE_BOOL
+	var result = func condition_result(condition : RegExMatch) -> bool:
+		var subject
+		var comparator
+		var object
+		var type
+		subject = condition.get_string("Subject")
+		if !condition.get_string("IntCom").is_empty():
+			comparator = condition.get_string("IntCom")
+			object = condition.get_string("IntObj")
+			type = TYPE_INT
+		elif !condition.get_string("BoolCom").is_empty():
+			comparator = condition.get_string("BoolCom")
+			object = condition.get_string("BoolObj")
+			type = TYPE_BOOL
+		var sub = Global_Data.get_data(subject, type)
 		var obj
-		if _type == TYPE_INT:
-			if int(_object) != 0 or _object == "0":
-				obj = int(_object)
+		if type == TYPE_INT:
+			if int(object) != 0 or object == "0":
+				obj = int(object)
 			else:
 				push_warning("Warning: Invalid object: 
-					\"{object}\" of type: \"{type}\"".format({"object":_object, "type":_type}))
-				obj = Global_Data.get_data(_object, _type)
-		elif _type == TYPE_BOOL:
-			match _object:
+					\"{object}\" of type: \"{type}\"".format({"object":object, "type":type}))
+				obj = Global_Data.get_data(object, type)
+		elif type == TYPE_BOOL:
+			match object:
 				"true":
 					obj = true
 				"false":
 					obj = false
 				_:
 					push_warning("Warning: Invalid object: 
-						\"{object}\" of type: \"{type}\"".format({"object":_object, "type":_type}))
-					obj = Global_Data.get_data(_object, _type)
+						\"{object}\" of type: \"{type}\"".format({"object":object, "type":type}))
+					obj = Global_Data.get_data(object, type)
 		else:
-			obj = Global_Data.get_data(_object, _type)
-		match _comparator:
+			obj = Global_Data.get_data(object, type)
+		match comparator:
 				"==","is":
 					return sub == obj
 				"!=","is_not":
@@ -89,22 +105,26 @@ static func read_condition(step:String)-> bool:
 					return sub >= obj
 				_:
 					push_error("ERROR: Invalid command comparator: 
-						\"{c}\"".format({"c":_comparator}))
+						\"{c}\"".format({"c":comparator}))
 					return false
-	finalResults.append(result)
 	
-	var keyWord = condition.get_string("Keyword")
+	finalResults.append(result.call(conditionA))
+	var keyWord = conditionA.get_string("Keyword") if !conditionA.get_string("Keyword").is_empty() else ""
 	match keyWord:
 		"and":
+			var conditionB = conditionRegex.search(conditionA.get_string("ConditionB")+"?")
+			finalResults.append(result.call(conditionB))
 			if finalResults[0] == true and finalResults[1] == true:
-				var s = step.trim_prefix(condition.get_string()).strip_edges()
+				var s = step.trim_prefix(conditionA.get_string()).strip_edges()
 				handle_input(s)
 				return true
 			else:
 				return false
 		"or":
+			var conditionB = conditionRegex.search(conditionA.get_string("ConditionB")+"?")
+			finalResults.append(result.call(conditionB))
 			if finalResults[0] == true or finalResults[1] == true:
-				var s = step.trim_prefix(condition.get_string()).strip_edges()
+				var s = step.trim_prefix(conditionA.get_string()).strip_edges()
 				handle_input(s)
 				return true
 			else:
@@ -118,43 +138,57 @@ func condition_statement(_arg:String):
 		step = step.strip_edges()
 		var prefix = conditionPrefixRegex.search(step).get_string() #find prefix
 		step = step.trim_prefix(prefix).strip_edges() #trim if: elif: or else:
-		var condition = conditionRegex.search(step)
-		var conditionResults : Array[bool] = []
-		match prefix:
-			"if:","elif:":
-				
-				conditionResults.append(read_condition(step))
-				#if the conditional check end, after the first one, continue
-				if condition.get_string("Keyword").is_empty():
-					#if true break, else continue
-					if conditionResults[0] == true:
-						var s = step.trim_prefix(condition.get_string()).strip_edges()
-						handle_input(s)
-						break
-					continue
-				#ConB?
-				var conditionB = conditionRegex.search(condition.get_string("ConditionB")+"?")
-				
-				conditionResults.append(read_condition(condition.get_string("ConditionB")+"?"))
-				
-				#var keyWord = condition.get_string("Keyword")
-				#match keyWord:
-					#"and":
-						#if conditionResults[0] == true and conditionResults[1] == true:
-							#var s = step.trim_prefix(condition.get_string()).strip_edges()
-							#handle_input(s)
-							#break
-						#continue
-					#"or":
-						#if conditionResults[0] == true or conditionResults[1] == true:
-							#var s = step.trim_prefix(condition.get_string()).strip_edges()
-							#handle_input(s)
-							#break
-						#continue
-			"else:":
+		if prefix == "if:" or prefix == "elif:":
+			var result = read_condition(step)
+			var condition = conditionRegex.search(step)
+			if result == true:
 				var s = step.trim_prefix(condition.get_string()).strip_edges()
-				handle_input(s)
-func condition_result(_subject:String, _comparator:String, _object:String, _type:Variant.Type) -> bool:
+				Command_Listener.handle_input(s)
+				break
+			else:
+				continue
+		elif prefix == "else:": #prefix is else
+			Command_Listener.handle_input(step)
+			break
+		else:
+			push_error("Invalid Condition_Statement")
+						#handle_input(s)
+		#var conditionResults : Array[bool] = []
+		#match prefix:
+			#"if:","elif:":
+				#
+				#conditionResults.append(read_condition(step))
+				##if the conditional check end, after the first one, continue
+				#if condition.get_string("Keyword").is_empty():
+					##if true break, else continue
+					#if conditionResults[0] == true:
+						#var s = step.trim_prefix(condition.get_string()).strip_edges()
+						#handle_input(s)
+						#break
+					#continue
+				##ConB?
+				#var conditionB = conditionRegex.search(condition.get_string("ConditionB")+"?")
+				#
+				#conditionResults.append(read_condition(condition.get_string("ConditionB")+"?"))
+				#
+				##var keyWord = condition.get_string("Keyword")
+				##match keyWord:
+					##"and":
+						##if conditionResults[0] == true and conditionResults[1] == true:
+							##var s = step.trim_prefix(condition.get_string()).strip_edges()
+							##handle_input(s)
+							##break
+						##continue
+					##"or":
+						##if conditionResults[0] == true or conditionResults[1] == true:
+							##var s = step.trim_prefix(condition.get_string()).strip_edges()
+							##handle_input(s)
+							##break
+						##continue
+			#"else:":
+				#var s = step.trim_prefix(condition.get_string()).strip_edges()
+				#handle_input(s)
+func condition_result3(_subject:String, _comparator:String, _object:String, _type:Variant.Type) -> bool:
 	var sub = Global_Data.get_data(_subject, _type)
 	var obj
 	if _type == TYPE_INT:

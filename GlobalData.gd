@@ -1,5 +1,5 @@
 class_name Global_Data extends Node
-static var data : Dictionary = {"a":true}
+static var data : Dictionary = {"a":false}
 
 #static var keyRegex = RegEx.new()
 ##g2 is int, g3 is bool , g4 is name
