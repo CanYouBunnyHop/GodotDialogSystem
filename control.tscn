@@ -1,0 +1,85 @@
+[gd_scene load_steps=8 format=3 uid="uid://b2wuwiadupfke"]
+
+[ext_resource type="Script" path="res://CustomBBTag_ghost.gd" id="1_bro5r"]
+[ext_resource type="Texture2D" uid="uid://dohy7iuwwp2wn" path="res://defaultTestEmotion.png" id="1_slwwy"]
+[ext_resource type="Script" path="res://CustomBBTag_matrix.gd" id="2_17434"]
+[ext_resource type="Script" path="res://DialogSystem.gd" id="3_s0yt5"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_45a1b"]
+atlas = ExtResource("1_slwwy")
+region = Rect2(0, 0, 96, 32)
+
+[sub_resource type="RichTextEffect" id="RichTextEffect_pwlq5"]
+script = ExtResource("1_bro5r")
+
+[sub_resource type="RichTextEffect" id="RichTextEffect_dhnip"]
+script = ExtResource("2_17434")
+
+[node name="Control" type="Control" node_paths=PackedStringArray("buttonContainer", "dialogBox")]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("3_s0yt5")
+buttonContainer = NodePath("Button Container")
+dialogBox = NodePath("Panel/RichTextLabel")
+
+[node name="Panel" type="Panel" parent="."]
+layout_mode = 0
+offset_left = 25.0
+offset_top = 517.0
+offset_right = 1134.0
+offset_bottom = 627.0
+
+[node name="Sprite2D" type="Sprite2D" parent="Panel"]
+position = Vector2(66, 56)
+scale = Vector2(3.09375, 3.09375)
+texture = SubResource("AtlasTexture_45a1b")
+hframes = 3
+
+[node name="RichTextLabel" type="RichTextLabel" parent="Panel"]
+layout_mode = 1
+offset_left = 146.0
+offset_top = 22.0
+offset_right = 646.0
+offset_bottom = 522.0
+bbcode_enabled = true
+text = "This is a textbox
+[b] bold text [/b]
+[i] itallic text [/i]
+[ghost freq=10 span=5] ghost [/ghost]
+
+[pulse freq=1.0 color=#ffffff40 ease=-2.0]pulse[/pulse]
+
+[wave amp=50 freq=7 connected=1]waveppppppppppppp[/wave]
+
+[tornado radius=10.0 freq=1.0 connected=1]{tornado}[/tornado]
+
+[shake rate=20.0 level=5 connected=1]{shake}[/shake]
+
+[rainbow freq=1.0 sat=0.8 val=0.8]{rainbow}[/rainbow]
+
+[matrix clean=5 dirty=6 span=1] op is the king dude my man [/matrix]
+
+"
+custom_effects = [SubResource("RichTextEffect_pwlq5"), SubResource("RichTextEffect_dhnip")]
+
+[node name="Button Container" type="VBoxContainer" parent="."]
+layout_mode = 0
+offset_left = 207.0
+offset_top = 101.0
+offset_right = 957.0
+offset_bottom = 389.0
+alignment = 1
+
+[node name="Button" type="Button" parent="Button Container"]
+visible = false
+layout_mode = 2
+text = "A"
+
+[node name="Button2" type="Button" parent="Button Container"]
+visible = false
+layout_mode = 2
+text = "A"
