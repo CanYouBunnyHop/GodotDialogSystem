@@ -1,0 +1,20 @@
+if command
+<if:|elif:|else:> <subject> <comparator> <object> <and|or> <second condition> <?> <command chain> <;>
+if: = declare start of the command
+<subject> = get global dictionary, if subject doesn't exist, create one
+<comparator> = for integer use (==|!=|<|<=|>|>=) for bool use (is|is_not)
+<object> = used for comparison
+<and|or> = optional to include a second condition, "and" checks for both conditions are true, "or" checks for either condition is true
+<command> = another command that can be run if the condition is true
+<?> end of condition check
+<;> end of current current command chain
+elif: = if "if:" has failed check this condition
+else: = rus when all other condition b4 failed, run this
+
+quirks
+usage of if and elif doesn't matter, they are treated the same, however "if:" is required to be at the start to
+be considered a valid command. The placement of those conditions, however, matters, if you used 2 "if:" and both
+condition are true, only the first "if:" will be called, as the loop has exited.
+
+then command
+<then:> <target> <operator> <value>

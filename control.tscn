@@ -1,9 +1,9 @@
 [gd_scene load_steps=8 format=3 uid="uid://b2wuwiadupfke"]
 
-[ext_resource type="Script" path="res://CustomBBTag_ghost.gd" id="1_bro5r"]
+[ext_resource type="Script" path="res://CustomBBTags/CustomBBTag_ghost.gd" id="1_bro5r"]
 [ext_resource type="Texture2D" uid="uid://dohy7iuwwp2wn" path="res://defaultTestEmotion.png" id="1_slwwy"]
-[ext_resource type="Script" path="res://CustomBBTag_matrix.gd" id="2_17434"]
-[ext_resource type="Script" path="res://DialogSystem.gd" id="3_s0yt5"]
+[ext_resource type="Script" path="res://CustomBBTags/CustomBBTag_matrix.gd" id="2_17434"]
+[ext_resource type="Script" path="res://DialogSystemScripts/DialogSystem.gd" id="3_s0yt5"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_45a1b"]
 atlas = ExtResource("1_slwwy")
@@ -23,6 +23,7 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("3_s0yt5")
+file = "res://txt files/Conversation.txt"
 buttonContainer = NodePath("Button Container")
 dialogBox = NodePath("Panel/RichTextLabel")
 
