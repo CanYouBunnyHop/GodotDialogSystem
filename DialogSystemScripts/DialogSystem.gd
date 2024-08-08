@@ -64,6 +64,7 @@ func play_next_dialog():
 	if get_line().is_empty():
 		return
 	var dialogLine = get_line() # cache the dialog line b4 reading further
+	
 	if choicesRegex.search(dialogLine) == null: # don't update the text if it is a choice
 		read_dialog(dialogLine)
 	while choicesRegex.search(get_line()) != null: # while currentline is a choice, loops
@@ -71,27 +72,42 @@ func play_next_dialog():
 		if choicesRegex.search(get_line(1)) == null: #if next line is not a choice, break the loop
 			break
 		currentLine += 1
-func read_command_box(line:String)-> RegExMatch:
-	var cmdBox : RegExMatch = commandBoxRegex.search(line)
-	var content = cmdBox.get_string("BoxA").trim_prefix("(").trim_suffix(")")
-	boxA_condition(content)
-	return cmdBox
+		
+func read_command_boxA_condition(line:String)-> bool:
+	if commandBoxRegex.search(line) == null: return true
 	
-func boxA_condition(condition:String)-> bool:
-	var c = Command_Listener.conditionRegex.search(condition)
-	
-	return false
+	var cmdBoxes = commandBoxRegex.search(line)
+	if cmdBoxes.get_string("BoxA").is_empty(): 
+		return true
+	else:
+		var content = line.trim_prefix("(").trim_suffix(")")
+		var condition = Command_Listener.read_condition(content)
+		return condition
 	
 func create_choice_button(line):
-	lockScene = true
+	#if the first cmd box exist and condition is false, return
+	if read_command_boxA_condition(line) == false: return
+	
 	var butt = Button.new()
 	var butttext = line
-	#var cmdBox = commandBoxRegex.search(butttext)
-	if read_command_box(line).strip_edges().is_empty():
-		var box = read_command_box(line) #get box
-		butttext = line.left(-box.length()-1) #delete box from line
-		var content = box.get_string("Content")#get the content of the box
-		butt.pressed.connect(func(): Command_Listener.handle_input(content)) #connect cmds to button
+	lockScene = true
+	var r = commandBoxRegex.search(line)
+	if !r.get_string("BoxB").is_empty():
+		butttext = r.get_string("Line")
+		var boxBcontent = r.get_string("BoxB").trim_prefix("(").trim_suffix(")")#get the content of the box
+		butt.pressed.connect(func(): Command_Listener.handle_input(boxBcontent)) #connect cmds to button
+		#
+		#
+	#if !cmdBoxes.get_string("BoxA").is_empty():
+		#var boxA = cmdBoxes.get_string("BoxA")
+		#var boxAcondition = read_command_boxA(cmdBoxes.get_string("BoxA"))
+	#
+	#
+	#
+	#if !cmdBoxes.get_string("BoxA").is_empty():
+		#butttext = line.left(-boxA.length()-1) #delete box content from line
+		#var boxBcontent = cmdBoxes.get_string("BoxB").trim_prefix("(").trim_suffix(")")#get the content of the box
+		#butt.pressed.connect(func(): Command_Listener.handle_input(boxBcontent)) #connect cmds to button
 	#default functions for button
 	butt.pressed.connect(func(): choice_button_pressed_default(butt, butttext))
 	butt.text = butttext
@@ -104,6 +120,7 @@ func choice_button_pressed_default(butt : Button, chosenText = ""):
 		dialogBox.text = chosenText
 
 func read_dialog(dialogLine):
+	if read_command_boxA_condition(dialogLine) == false: return
 	var tone = toneRegex.search(dialogLine)
 	var name_ = nameRegex.search(dialogLine)
 	

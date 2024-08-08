@@ -1,3 +1,9 @@
+command boxes
+(BoxA) text... (BoxB)
+there are 2 command boxes, command in "BoxA" is executed before the text. however it only takes "if:" command, 
+this will be a conditional check if the line will be ignored, any other commands will be ignored, 
+only the first "if:" counts
+
 if command
 <if:|elif:|else:> <subject> <comparator> <object> <and|or> <second condition> <?> <command chain> <;>
 if: = declare start of the command
