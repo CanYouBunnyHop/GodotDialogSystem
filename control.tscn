@@ -23,7 +23,7 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("3_s0yt5")
-file = "res://txt files/Conversation.txt"
+file = "res://txt files/SceneTests.txt"
 buttonContainer = NodePath("Button Container")
 dialogBox = NodePath("Panel/RichTextLabel")
 

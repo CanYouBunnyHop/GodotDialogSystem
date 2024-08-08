@@ -1,8 +1,16 @@
 command boxes
 (BoxA) text... (BoxB)
+(<condition>) text... (<command>)
 there are 2 command boxes, command in "BoxA" is executed before the text. however it only takes "if:" command, 
-this will be a conditional check if the line will be ignored, any other commands will be ignored, 
-only the first "if:" counts
+this will be a conditional check, if it's false if rest of the line will be ignored, any other commands will also be ignored, 
+only the first "if:" counts, and the keyword is not nessasary
+
+(BoxA) >choice (BoxB)
+(<condition> ? <disable:|hide:>) >choice (<command>)
+this can also be appllied to choices, however you can apply an "instruction" on the choice button if the condition failed
+on default, the button will be disabled but visible
+"disabled:" does the same as default
+"hide:" this will stop the creation of the button
 
 if command
 <if:|elif:|else:> <subject> <comparator> <object> <and|or> <second condition> <?> <command chain> <;>

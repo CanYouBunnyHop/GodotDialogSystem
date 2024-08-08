@@ -1,6 +1,4 @@
 class_name Command_Listener extends Node
-
-
 var n : 
 	get: return Global_Data.data
 
@@ -42,7 +40,7 @@ func print_something(_arg:String): #for testing
 static func read_condition(step:String)-> bool:
 	var conditionA = conditionRegex.search(step)
 	var finalResults : Array = []
-	var result = func condition_result(condition : RegExMatch) -> bool:
+	var subConditionResult = func subCondition_result(condition : RegExMatch) -> bool:
 		var subject
 		var comparator
 		var object
@@ -95,12 +93,12 @@ static func read_condition(step:String)-> bool:
 						\"{c}\"".format({"c":comparator}))
 					return false
 	
-	finalResults.append(result.call(conditionA))
+	finalResults.append(subConditionResult.call(conditionA))
 	var keyWord = conditionA.get_string("Keyword") if !conditionA.get_string("Keyword").is_empty() else ""
 	match keyWord:
 		"and":
 			var conditionB = conditionRegex.search(conditionA.get_string("ConditionB")+"?")
-			finalResults.append(result.call(conditionB))
+			finalResults.append(subConditionResult.call(conditionB))
 			if finalResults[0] == true and finalResults[1] == true:
 				var s = step.trim_prefix(conditionA.get_string()).strip_edges()
 				handle_input(s)
@@ -109,7 +107,7 @@ static func read_condition(step:String)-> bool:
 				return false
 		"or":
 			var conditionB = conditionRegex.search(conditionA.get_string("ConditionB")+"?")
-			finalResults.append(result.call(conditionB))
+			finalResults.append(subConditionResult.call(conditionB))
 			if finalResults[0] == true or finalResults[1] == true:
 				var s = step.trim_prefix(conditionA.get_string()).strip_edges()
 				handle_input(s)

@@ -1,0 +1,28 @@
+--Scene_1--
+This is scene 1
+Choose one option
+	> jump to scene 2
+	> jump to scene 3
+	> jump to scene 4
+	> do nothing
+--Scene_2--
+	This is scene 2
+Choose one option
+	> jump to scene 2
+	> jump to scene 3
+	> jump to scene 4
+	> do nothing
+--Scene_3--
+This is scene 3
+Choose one option
+	> jump to scene 2
+	> jump to scene 3
+	> jump to scene 4
+	> do nothing
+--Scene_4--
+This is scene 4
+Choose one option
+	> jump to scene 2
+	> jump to scene 3
+	> jump to scene 4
+	> do nothing
