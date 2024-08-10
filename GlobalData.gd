@@ -6,6 +6,7 @@ static var data : Dictionary = {"a":false,"b":10}
 #static var valueRegex = RegEx.new() #((\d+)|(true|false)|([a-zA-Z]+))
 func _ready():
 	pass
+	#print("ass"+"\n"+"ass2")
 static func get_data(key : String, type: Variant.Type):
 	if !data.has(key) or typeof(data[key]) != type: #will override and create new var if type dont match
 		match type:

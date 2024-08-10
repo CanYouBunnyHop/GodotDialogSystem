@@ -6,7 +6,7 @@ Choose one option
 	> jump to scene 4
 	> do nothing
 --Scene_2--
-	This is scene 2
+This is scene 2
 Choose one option
 	> jump to scene 2
 	> jump to scene 3
