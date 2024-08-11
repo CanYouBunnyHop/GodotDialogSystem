@@ -1,0 +1,3 @@
+Red: My color is red/s
+Blue: My color is blue/s
+Purple: My color is purple/s

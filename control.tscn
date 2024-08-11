@@ -15,7 +15,7 @@ script = ExtResource("1_bro5r")
 [sub_resource type="RichTextEffect" id="RichTextEffect_dhnip"]
 script = ExtResource("2_17434")
 
-[node name="Control" type="Control" node_paths=PackedStringArray("buttonContainer", "dialogBox")]
+[node name="DialogSystem" type="Control" node_paths=PackedStringArray("buttonContainer", "dialogBox")]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -23,7 +23,7 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("3_s0yt5")
-file = "res://txt files/Conversation.txt"
+file = "res://txt files/TextTests.txt"
 buttonContainer = NodePath("Button Container")
 dialogBox = NodePath("Panel/RichTextLabel")
 
@@ -48,17 +48,20 @@ offset_right = 646.0
 offset_bottom = 522.0
 bbcode_enabled = true
 text = "This is a textbox
+[b]bold [i]bold italic[/b] italic[/i] = invalid entanglement
+[b]bold [i]bold italic[/i][/b] [i]italic[/i] = valid
+
 [b] bold text [/b]
 [i] itallic text [/i]
 [ghost freq=10 span=5] ghost [/ghost]
 
-[pulse freq=1.0 color=#ffffff40 ease=-2.0]pulse[/pulse]
+[pulse freq=1.0 color=#ffffff40 ease=-2.0] pulsating [/pulse]
 
 [wave amp=50 freq=7 connected=1]waveppppppppppppp[/wave]
 
 [tornado radius=10.0 freq=1.0 connected=1]{tornado}[/tornado]
 
-[shake rate=20.0 level=5 connected=1]{shake}[/shake]
+[shake rate=20.0 level=5 connected=1] sssssshake [/shake]
 
 [rainbow freq=1.0 sat=0.8 val=0.8]{rainbow}[/rainbow]
 

@@ -1,27 +1,27 @@
 class_name Command_Listener extends Node
-var n : 
+var globaldata : 
 	get: return Global_Data.data
 
-#var conditionStatementRegex = RegEx.new()
-var conditionPrefixRegex = RegEx.new()
+static var currentDialogSystem : Dialog_System
 static var conditionRegex = RegEx.new()
+var conditionPrefixRegex = RegEx.new()
 var statementRegex = RegEx.new()
 var jumpRegex = RegEx.new()
 
 static var commandList : Array[Command]
 func _ready():
 	commandList = [
-		Command.new("ps", "prints string", "PS <something>", print_something),
-		Command.new("if:", "Checks Condition, if true, then do action", 
+		Command.new("if:", "Checks Condition, if true, then do action",
 		"<if:|elif:|else:> <subject> <comparator> <object> <and|or> <second condition> <?> <command> <;>",
-		condition_statement),
+		read_condition_container),
 		Command.new("then:", "Updates variable or creates a new one if it doesn't exist", 
-		"then: <target> <operator> <value>", validate_command_chain)
+		"then: <target> <operator> <value>", validate_command_chain),
+		Command.new("jump:", "jump to a flag in the conversation", "jump: <flag>", validate_command_chain)
 		]
 	conditionPrefixRegex.compile(r'^(if:|elif:|else:)')
 	conditionRegex.compile(r'(?<Condition>(?<Subject>[a-zA-Z]+)\s+(?:(?<IntCom>==|!=|<|<=|>|>=)\s+(?<IntObj>\d+|)|(?<BoolCom>is|is_not)\s+(?<BoolObj>true|false|[a-zA-Z]+)))(?:\s+(?<Keyword>and|or)|)(?(Keyword)(?<ConditionB>\s+(?&Condition)))\s*\?')
-	statementRegex.compile(r'(?<Statement>then:\s*(?<Target>[a-zA-z]+)\s+(?:(?<IntOp>=|\+=|-=|\*=|\/=)\s*(?<IntVal>\d+|[a-zA-z]+)|(?<BoolOp>is|is_not)\s+(?<BoolVal>true|false|[a-zA-z]+)))')
-	#jumpRegex.compile(r'')
+	statementRegex.compile(r'(?:then:\s*(?<Target>[a-zA-z]+)\s+(?:(?<IntOp>=|\+=|-=|\*=|\/=)\s*(?<IntVal>\d+|[a-zA-z]+)|(?<BoolOp>is|is_not)\s+(?<BoolVal>true|false|[a-zA-z]+)))')
+	jumpRegex.compile(r'(?:jump:(?:\s*)(?<Flag>\w+\s*?))')
 	#Command_Listener.handle_input("if: a is true ? then: b is false; else: then: b is true")
 	
 static func handle_input(_inputFull : String):
@@ -34,11 +34,8 @@ static func handle_input(_inputFull : String):
 				break
 			elif i == (commandList.size()-1):
 				push_error("Invalid Command ID")
-func print_something(_arg:String): #for testing
-	print(_arg)
-##Steps are seperated by ";" split b4 parsing
 static func read_condition(step:String)-> bool:
-	var conditionA = conditionRegex.search(step)
+	var subConditionA = conditionRegex.search(step)
 	var finalResults : Array = []
 	var subConditionResult = func subCondition_result(condition : RegExMatch) -> bool:
 		var subject
@@ -93,31 +90,31 @@ static func read_condition(step:String)-> bool:
 						\"{c}\"".format({"c":comparator}))
 					return false
 	
-	finalResults.append(subConditionResult.call(conditionA))
-	var keyWord = conditionA.get_string("Keyword") if !conditionA.get_string("Keyword").is_empty() else ""
+	finalResults.append(subConditionResult.call(subConditionA))
+	var keyWord = subConditionA.get_string("Keyword") if !subConditionA.get_string("Keyword").is_empty() else ""
 	match keyWord:
 		"and":
-			var conditionB = conditionRegex.search(conditionA.get_string("ConditionB")+"?")
-			finalResults.append(subConditionResult.call(conditionB))
+			var subConditionB = conditionRegex.search(subConditionA.get_string("ConditionB")+"?")
+			finalResults.append(subConditionResult.call(subConditionB))
 			if finalResults[0] == true and finalResults[1] == true:
-				var s = step.trim_prefix(conditionA.get_string()).strip_edges()
-				handle_input(s)
+				var commandChain = step.trim_prefix(subConditionA.get_string()).strip_edges()
+				handle_input(commandChain)
 				return true
 			else:
 				return false
 		"or":
-			var conditionB = conditionRegex.search(conditionA.get_string("ConditionB")+"?")
-			finalResults.append(subConditionResult.call(conditionB))
+			var subConditionB = conditionRegex.search(subConditionA.get_string("ConditionB")+"?")
+			finalResults.append(subConditionResult.call(subConditionB))
 			if finalResults[0] == true or finalResults[1] == true:
-				var s = step.trim_prefix(conditionA.get_string()).strip_edges()
-				handle_input(s)
+				var commandChain = step.trim_prefix(subConditionA.get_string()).strip_edges()
+				handle_input(commandChain)
 				return true
 			else:
 				return false
 		_:
 			return finalResults[0]
 	
-func condition_statement(_arg:String):
+func read_condition_container(_arg:String):
 	var allSteps = _arg.split(";",false)
 	for step in allSteps:
 		step = step.strip_edges()
@@ -127,8 +124,8 @@ func condition_statement(_arg:String):
 			var result = Command_Listener.read_condition(step)
 			var condition = conditionRegex.search(step)
 			if result == true:
-				var s = step.trim_prefix(condition.get_string()).strip_edges()
-				Command_Listener.handle_input(s)
+				var commandChain = step.trim_prefix(condition.get_string()).strip_edges()
+				Command_Listener.handle_input(commandChain)
 				break
 			else:
 				continue
@@ -136,25 +133,26 @@ func condition_statement(_arg:String):
 			Command_Listener.handle_input(step)
 			break
 		else:
-			push_error("Invalid Condition_Statement")
+			push_error("Invalid Condition Container")
 func validate_command_chain(input:String):
-	var statements : Array[RegExMatch] = statementRegex.search_all(input)
-	#var jumpInstruct : RegExMatch # split out then: and jump: command, command chain should only be called when using if command
+	var thenCommands : Array[RegExMatch] = statementRegex.search_all(input)
+	var jumpCommand : RegExMatch = jumpRegex.search(input) # split out then: and jump: command, command chain should only be called when using if command
 	#var jump command
-	for s in statements:
-		var target = s.get_string("Target")
+	for tcmd in thenCommands:
+		var target = tcmd.get_string("Target")
 		var operator
 		var value
 		var type2
-		if !s.get_string("IntOp").is_empty():
-			operator = s.get_string("IntOp")
-			value = s.get_string("IntVal")
+		if !tcmd.get_string("IntOp").is_empty():
+			operator = tcmd.get_string("IntOp")
+			value = tcmd.get_string("IntVal")
 			type2 = TYPE_INT
-		elif !s.get_string("BoolOp").is_empty():
-			operator = s.get_string("BoolOp")
-			value = s.get_string("BoolVal")
+		elif !tcmd.get_string("BoolOp").is_empty():
+			operator = tcmd.get_string("BoolOp")
+			value = tcmd.get_string("BoolVal")
 			type2 = TYPE_BOOL
 		do_statement(target, operator, value, type2)
+	jump_statement(jumpCommand.get_string("Flag"))
 func do_statement(target:String, operator:String, value:String, type:Variant.Type):
 	var val
 	if type == TYPE_INT:
@@ -175,5 +173,8 @@ func do_statement(target:String, operator:String, value:String, type:Variant.Typ
 					\"{value}\" of type: \"{type}\"".format({"value":value, "type":type}))
 				val = Global_Data.get_data(value, type)
 	Global_Data.set_data(target, val, operator)
-	
-	
+func jump_statement(flag:String):
+	if currentDialogSystem.flagDict.has(flag):
+		currentDialogSystem.play_next_dialog(flag)
+	else:
+		push_error("ERROR: Invalid flag for Jump Statement")

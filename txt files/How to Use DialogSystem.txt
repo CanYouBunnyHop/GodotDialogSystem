@@ -1,0 +1,141 @@
+commandListener
+singleton, takes in the current DialogSystem to read
+
+GlobalData
+singleton, holds variables used in conversation and command boxes
+
+DialogSystem
+can take one conversation, you should use multiple instances for different conversation.
+Unless ur game is a pure visual novel.
+
+conversation
+a txt file to be parsed into a DialogSystem
+
+flags
+--<Flag>--
+flag remembers the position of the line in a conversation, using "jump:" command, you can either skip or 
+go back to that specified position
+
+
+
+command boxes
+(BoxA) <text> (BoxB)
+there are 2 command boxes, command in "BoxA" is executed before the text. 
+However it only takes in a Condition Container with one step, also an instruction
+
+Replace Command
+{<formatFlag> : <default>}
+{<condition>? replace: <formatFlag> : <default> ; }
+<default> = default string if no matches are found
+<formatFlag> = input to look for corresponding string in GlobalData.gd, replace match with default
+
+
+Dialog
+(BoxA) <Name> : <dialog> </tone> (BoxB)
+BBCode is supported, using rich text label.
+<Name> = can determine the character portraits, unique font color, displayed before the dialog
+<dialog> = dialog to be displayed
+</tone> = is hidden, determine the facial expression of said character and BBCode of the text
+
+Dialog Lines
+(<condition>? <instruction>) text... (<command>)
+if the condition is false the rest of the line will be ignored by default, 
+any other commands in BoxB will also be ignored, 
+only the first step is counted, and the "if:" command ID is not nessasary
+<instruction>
+"" default = if condition is false, the text and command boxB will be skipped over
+maybe will add instruction...
+
+choices
+> (BoxA) <text> (BoxB)
+> (<condition> ? <instruction>) <text> (<command>)
+choices are defined by ">" at the start of the line
+you can apply an optional instruction in a choice's BoxA
+<text> = text displayed on buttons
+<instruction>
+"" = default, the button will be disabled but visible
+"disabled:" = does the same as default, the button will be disabled but visible
+"hide:" = this will stop the creation of the button
+
+condition container
+<if:|elif:> <sub-conditionA> <and|or> <sub-conditionB> ? <command chain> ;
+<else:> <command chain>
+Sub-condiitons = <subject> <comparator> <object>
+if: = declare start of the command
+<subject> = get global dictionary, if subject doesn't exist, create one
+<comparator> = for integer use (==|!=|<|<=|>|>=) for bool use (is|is_not)
+<object> = used for comparison
+<and|or> = optional, includes a 2nd Sub-condition, "and" checks for both sub-conditions are true, "or" checks for either sub-conditions is true
+<command> = another command that can be run if the condition is true
+<?> end of condition check
+<;> end of current current step, and start of a new step
+elif: = if "if:" has failed check this condition
+else: = do no take in a condiiton run when all other condition b4 failed, run this
+ie:
+(if: a == 0 ? then: b += 1 ; elif: a == 1 ? then: b -= 1 ; else: b = 1)
+steps are seperated by ";", this tells the compiler to move on to the next condition
+if the previous condition has failed, without it, 
+the step will only read the first condition
+quirks
+usage of if and elif doesn't matter, they are treated the as same, 
+however "if:" is required to be at the start to be considered a valid container. 
+If you used 2 "if:" and both condition are true, 
+only the first "if:" will be called, as the loop has already exited.
+
+then command
+<then:> <target> <operator> <value>
+<target> = get global dictionary, if target doesn't exist, create one
+<operator> = for integer use (=|+=|-=|*=|/=) for bool use (is|is_not)
+<value> = update the target to that of the value
+ie:
+(then: monsterIsAlive is false)
+ie:
+(then: monsterHP -= 5)
+ie:
+(then: toggle is_not toggle)
+"is_not" is only implemented for toggle usage without the need for condition container
+quirk
+for numbers, only int are currently supported, when dividing, decimal places are truncated
+then dividing by 0
+
+jump command
+<jump:> <flag>
+jump to the specified flag, if flag is not found, the command is ignored
+
+Command chain
+command chain is seperated by ";" in a condition check in command box B
+use "," to seperate if the chain is not contained in a condition check
+this is useful when a single condition check is true and
+multiple commands needs to be executed.
+ie:
+>buy potion (if: money >= 10 ? then: money -= 10 jump: flag_Buy ; else: then: backruptcy is true jump: flag_Broke)
+in this example, there are 2 command chain, both having a "then:" and "jump:" command.
+ie:
+(if a is true? then: a is false, then: b is true)
+in this example, there are 2 command chain, 1st chain is part of a condition container, 
+2nd chain is outside of the condition container, seperated by ",". 2nd chain will always
+execute, since it's not contained in a condition container
+quirks 
+"then:" will be executed in order.
+"jump:" is always executed last, only the first "jump:" will be executed
+
+custom command
+if your needs are more specific, you can create your own in "CommandListener.gd"
+try always add ":" to the end of your command ID, this prevents potential error
+when there are variables with the same name
+ie:
+"custom:"
+
+important:
+ONLY NAME VARIABLES WITH a-z and A-Z, THIS IS TO PREVENT COMMANDLISTENER TO CONFUSE IT WITH INTERGER OR OTHER KEYWORDS
+NEVER NAME VARIABLES "true" or "false",THIS IS TO PREVENT COMMANDLISTENER TO CONFUSE IT WITH BOOLEAN WITH CORRESPONDING VALUE
+Everything is case-sensitive, to avoid confusion, all the command inputs should be in lower-case,
+except when you name variables
+you don't have to create variables first, if the variable doesn't exist, 
+"GlobalData" will create one automatically, depending on the operator or comparator, 
+the default value will either be "0" or "false"
+There is only 2 types of Variable you can create dynamically via command, 
+and are currently supported, int and bool.
+if you want to have "()" brackets at the start or end of your displayed line,
+you can exit them, ie:
+(hidden) (displayed) text in here will also be displayed (also displayed) (hidden)

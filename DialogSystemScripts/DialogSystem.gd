@@ -1,54 +1,58 @@
-extends Node
+class_name Dialog_System extends Node
 
-var currentLine :int = 0
-var currentScene : Dictionary #dictionary that stores conversations
-var currentConversation : Array[String]
-var sceneDict : Dictionary = {}
-@export var characterNames : Dictionary = {} #for determining color names
+var currentLine :int = -1
+var flagDict : Dictionary = {}
+var currentConversation : Array[String] = []
+
+#@export var characterNames : Dictionary = {} #for determining color names
 @export_file var file
 @export var buttonContainer : Node
 @export var dialogBox : RichTextLabel
 
-#var nameRegex = RegEx.new() #"/^\w+:" look for name at the start
-#var toneRegex = RegEx.new() #"\s\/\w+$" look for tone end of line
-#var ignoreRegex = RegEx.new() #"^\s*#" ignores comments
-#var choicesRegex = RegEx.new() #"^\s*>"
-#var commandBoxRegex = RegEx.new() #\(.*\)$ brackets after a line, but only check behind choices
 var lineCaptureRegex = RegEx.new()
 var buttonInstructRegex = RegEx.new() #(?<Instruction>disable:)
-var sceneRegex = RegEx.new() #^--(?<SceneName>.+)--$
-
-var varDict = {}
+var flagRegex = RegEx.new() #^--(?<Flag>\s*\w+\s*)--
 var lockScene : bool = false
-
 # Called when the node enters the scene tree for the first time.
 func _ready():
-	#nameRegex.compile(r'^\w+:')
-	#toneRegex.compile(r'\s\/\w+$')
-	#ignoreRegex.compile(r'^\s*#')
-	#choicesRegex.compile(r'^\s*>')
-	#commandBoxRegex.compile(r'(?:^(?<BoxA>\(.*?\))|)(?<Dialogline>.*(?=\()|.*)(?<BoxB>(?&BoxA)$|)')
-	lineCaptureRegex.compile(r'^(?:(?<Button>>\s*)|)(?:(?<BoxA>\(.*?\))|)(?:(?<Line>(?:(?<Name>\w+:)|)(?:(?<Dialog>.*(?=\/)|.*))(?:(?<Tone>\/\w+)|))(?=\()|(?&Line))(?<BoxB>(?&BoxA)$|)')
+	lineCaptureRegex.compile(r'^(?:(?<Button>>\s*)|)(?:(?<BoxA>\(.*?\))|)(?:(?<Line>(?:(?<Name>\w+):|)(?:(?<Dialog>.*(?=\/)|.*))(?:(?<Tone>\/\w+)|))(?=\()|(?&Line))(?<BoxB>(?&BoxA)$|)')
 	buttonInstructRegex.compile(r'(?<Instruction>\bdisable:|\bhide:)')
-	sceneRegex.compile(r'--(?<SceneName>.+)--$')
-	
+	flagRegex.compile(r'^--(?<Flag>\s*\w+\s*)--')
 	read_conversationFile(file)
 	print("Array size = {size}".format({"size": currentConversation.size()}))
-	start_conversation()
-func start_conversation():
-	currentLine = 0
-	#read_dialog(currentConversation[currentLine])
+	
+	#for testing
+	Command_Listener.currentDialogSystem = self
+	
+	#var temp = "dude ass dude"
+	#var col = Color.AQUA.to_html()
+	#var beforeFormat = "%s"+temp+"%s"
+	#var afterFormat = beforeFormat%["[color={c}]","[/color]"]
+	#var applyColor = afterFormat.format({"c":col})
+	#dialogBox.text = applyColor
+	#var redData = Global_Data.characterDataDict["Red"]
+	#print(redData.has("color"))
+	
+	#start_from_beginning()
+func start_from_beginning():
+	currentLine = -1
+	play_next_dialog()
 func _process(_delta):
 	if Input.is_action_just_pressed("Interact") and !lockScene:
 		play_next_dialog()
 func read_conversationFile(filename : String):
+	var flagName = "start"
 	var f = FileAccess.open(filename, FileAccess.READ)
 	if f.file_exists(filename):
 		while !f.eof_reached():
-			var line = (f.get_line() + "\n").strip_edges(true, false) #strips white spaces from left
-			var isComment = line.begins_with("#");
-			var sceneName = sceneRegex.search(line)
+			var line = f.get_line().strip_edges(true, false) #strips white spaces from left
+			var isComment = line.begins_with("#")
 			if line.is_empty() or isComment:
+				continue
+			var flag = flagRegex.search(line)
+			if flag != null: 
+				flagName = flag.get_string("Flag").strip_edges()
+				flagDict[flagName] = currentConversation.size()-1
 				continue
 			currentConversation.append(line)
 	else:
@@ -56,36 +60,17 @@ func read_conversationFile(filename : String):
 func get_line(_n = 0)->String:
 	var nline = currentLine + _n
 	if nline >= currentConversation.size(): #if index is over total dialogline array size
-		#end conversation
-		print("end conversation g")
 		return ""
 	else :
 		var line = currentConversation[nline]
 		return line.strip_edges()
-#func strip_command_box(line:String)->String:
-	#var lineMatch = commandBoxRegex.search(line)
-	#return lineMatch.get_string("Dialogline")
-func play_next_dialog():
+
+func play_next_dialog(_flagName : String = ""):
+	if _flagName != "":
+		currentLine = flagDict[_flagName] - 1
 	if currentLine >= currentConversation.size()-1: #if the conversation is over, returns
 		print("end conversation")
 		return
-	#currentLine += 1
-	#print("cur: "+get_line())
-	#var lineCaptures = func(_line:String = get_line())-> Dictionary:
-		#var line = lineCaptureRegex.search(_line)
-		#var isChoice = !line.get_string("Button").is_empty()
-		#var boxA = line.get_string("BoxA")
-		#var boxB = line.get_string("BoxB")
-		#var name_ = line.get_string("Name")
-		#var tone = line.get_string("Tone")
-		#var dialogLine = line.get_string("Dialog")
-		#return {
-		#"isChoice":isChoice,
-		#"boxA":boxA, 
-		#"boxB":boxB, 
-		#"name": name_, 
-		#"tone":tone, 
-		#"dialogLine" : dialogLine}
 		
 	while true:
 		currentLine += 1
@@ -169,18 +154,22 @@ func create_choice_button(_line):
 	choiceButt.pressed.connect(func(): buttonCommands.call())
 	
 func display_dialogLine(dialogLine: String, _name:String = "", _tone:String = ""):
-	#var tone = toneRegex.search(dialogLine)
-	#var name_ = nameRegex.search(dialogLine)
-	#if name_ != null:
-		#name_ = name_.strings[0]
-		#var split = dialogLine.split(":", true, 2)
-		#var col = characterNames[split[0]] if characterNames.has(split[0]) else Color.WHITE
-		#dialogLine = "[color={c}][b]{name}[/b][/color]: {dialog}".format(
-			#{"c": col.to_html(), "name" : split[0], "dialog" : split[1]})
-	#if tone != null:
-		#tone = tone.strings[0]
-		#dialogLine = dialogLine.left(-tone.length())
-	dialogBox.text = _name + dialogLine
+	var applyColor = func(_text:String, _color:String)->String:
+		var beforeFormat = "%s"+_text+"%s"
+		var afterFormat = beforeFormat%["[color={c}]","[/color]"]
+		var result = afterFormat.format({"c":_color})
+		return result
+	var col = Color.WHITE.to_html()
+	if Global_Data.characterDataDict.has(_name):
+		var curCharacterData = Global_Data.characterDataDict[_name]
+		if curCharacterData.has("color"):
+			col = curCharacterData["color"]
+	var BBName = applyColor.call(_name, col) 
+	var BoldBBName = apply_bbcode(BBName+":","b")
+	dialogBox.text = BoldBBName + dialogLine
 	print(str(currentLine) + ":" + get_line())
+func apply_bbcode(_text: String, _BBTag:String, _override: String = "")->String:
+	var result = "[{0}{1}]{2}[/{0}]".format([_BBTag, _override, _text])
+	return result
 func end_conversation():
 	pass
