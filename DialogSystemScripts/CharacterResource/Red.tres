@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="Character_Resource" load_steps=4 format=3 uid="uid://c5pqkgtxdl3sn"]
+
+[ext_resource type="Script" path="res://DialogSystemScripts/CharacterResource/CharacterResource.gd" id="1_47ypu"]
+[ext_resource type="Texture2D" uid="uid://dl6av4owco02k" path="res://testPortrait.png" id="2_fee2s"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_vttu8"]
+atlas = ExtResource("2_fee2s")
+region = Rect2(0, 0, 32, 32)
+
+[resource]
+resource_name = "Red"
+script = ExtResource("1_47ypu")
+texture = SubResource("AtlasTexture_vttu8")
+color = Color(1, 1, 1, 1)
+toneDict = {}
+frameCoordSize = Vector2i(7, 1)

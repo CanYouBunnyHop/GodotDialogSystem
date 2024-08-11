@@ -1,19 +1,19 @@
 [gd_scene load_steps=8 format=3 uid="uid://b2wuwiadupfke"]
 
-[ext_resource type="Script" path="res://CustomBBTags/CustomBBTag_ghost.gd" id="1_bro5r"]
-[ext_resource type="Texture2D" uid="uid://dohy7iuwwp2wn" path="res://defaultTestEmotion.png" id="1_slwwy"]
-[ext_resource type="Script" path="res://CustomBBTags/CustomBBTag_matrix.gd" id="2_17434"]
-[ext_resource type="Script" path="res://DialogSystemScripts/DialogSystem.gd" id="3_s0yt5"]
+[ext_resource type="Script" path="res://DialogSystemScripts/DialogSystem.gd" id="1_x0n5c"]
+[ext_resource type="Texture2D" uid="uid://dl6av4owco02k" path="res://testPortrait.png" id="2_nal4n"]
+[ext_resource type="Script" path="res://CustomBBTags/CustomBBTag_ghost.gd" id="3_udcrh"]
+[ext_resource type="Script" path="res://CustomBBTags/CustomBBTag_matrix.gd" id="4_akrjr"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_45a1b"]
-atlas = ExtResource("1_slwwy")
-region = Rect2(0, 0, 96, 32)
+atlas = ExtResource("2_nal4n")
+region = Rect2(6, 6, 20, 19)
 
 [sub_resource type="RichTextEffect" id="RichTextEffect_pwlq5"]
-script = ExtResource("1_bro5r")
+script = ExtResource("3_udcrh")
 
 [sub_resource type="RichTextEffect" id="RichTextEffect_dhnip"]
-script = ExtResource("2_17434")
+script = ExtResource("4_akrjr")
 
 [node name="DialogSystem" type="Control" node_paths=PackedStringArray("buttonContainer", "dialogBox")]
 layout_mode = 3
@@ -22,7 +22,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-script = ExtResource("3_s0yt5")
+script = ExtResource("1_x0n5c")
 file = "res://txt files/TextTests.txt"
 buttonContainer = NodePath("Button Container")
 dialogBox = NodePath("Panel/RichTextLabel")
@@ -38,7 +38,6 @@ offset_bottom = 627.0
 position = Vector2(66, 56)
 scale = Vector2(3.09375, 3.09375)
 texture = SubResource("AtlasTexture_45a1b")
-hframes = 3
 
 [node name="RichTextLabel" type="RichTextLabel" parent="Panel"]
 layout_mode = 1
@@ -87,3 +86,8 @@ text = "A"
 visible = false
 layout_mode = 2
 text = "A"
+
+[node name="TestPortrait" type="Sprite2D" parent="."]
+position = Vector2(110, 690)
+texture = ExtResource("2_nal4n")
+hframes = 7

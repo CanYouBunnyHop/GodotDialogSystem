@@ -5,7 +5,7 @@ var flagDict : Dictionary = {}
 var currentConversation : Array[String] = []
 
 #@export var characterNames : Dictionary = {} #for determining color names
-@export_file var file
+@export_file("*.txt") var file
 @export var buttonContainer : Node
 @export var dialogBox : RichTextLabel
 
@@ -164,7 +164,7 @@ func display_dialogLine(dialogLine: String, _name:String = "", _tone:String = ""
 		var curCharacterData = Global_Data.characterDataDict[_name]
 		if curCharacterData.has("color"):
 			col = curCharacterData["color"]
-	var BBName = applyColor.call(_name, col) 
+	var BBName = applyColor.call(_name, col)
 	var BoldBBName = apply_bbcode(BBName+":","b")
 	dialogBox.text = BoldBBName + dialogLine
 	print(str(currentLine) + ":" + get_line())

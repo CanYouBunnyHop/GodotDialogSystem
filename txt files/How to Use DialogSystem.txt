@@ -23,14 +23,13 @@ command boxes
 there are 2 command boxes, command in "BoxA" is executed before the text. 
 However it only takes in a Condition Container with one step, also an instruction
 
-Replace Command
+Replace Command #todo
 {<formatFlag> : <default>}
 {<condition>? replace: <formatFlag> : <default> ; }
 <default> = default string if no matches are found
 <formatFlag> = input to look for corresponding string in GlobalData.gd, replace match with default
 
-
-Dialog
+Dialog #todo
 (BoxA) <Name> : <dialog> </tone> (BoxB)
 BBCode is supported, using rich text label.
 <Name> = can determine the character portraits, unique font color, displayed before the dialog
