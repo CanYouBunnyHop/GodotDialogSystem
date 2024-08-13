@@ -1,3 +1,7 @@
+CharacterSpriteAtlas
+make sure each character is on the same row
+
+
 commandListener
 singleton, takes in the current DialogSystem to read
 
@@ -30,21 +34,22 @@ Replace Command #todo
 <formatFlag> = input to look for corresponding string in GlobalData.gd, replace match with default
 
 Dialog #todo
-(BoxA) <Name> : <dialog> </tone> (BoxB)
-BBCode is supported, using rich text label.
-<Name> = can determine the character portraits, unique font color, displayed before the dialog
-<dialog> = dialog to be displayed
-</tone> = is hidden, determine the facial expression of said character and BBCode of the text
+(BoxA) <Name> : <dialog> /<tone> <[BBCmd]> (BoxB)
+
 
 Dialog Lines
-(<condition>? <instruction>) text... (<command>)
+(<condition>? <instruction>) <Name> : <dialog> /<tone> <[BBCmd]> (<command>)
 if the condition is false the rest of the line will be ignored by default, 
 any other commands in BoxB will also be ignored, 
 only the first step is counted, and the "if:" command ID is not nessasary
+BBCode is supported, using rich text label.
+<Name> = can determine the character portraits, unique font color, displayed before the dialog
+<dialog> = dialog to be displayed
+<tone> = is hidden, determine the facial expression of said character 
+<[BBCmd]> apply BBCode to the dialog
 <instruction>
 "" default = if condition is false, the text and command boxB will be skipped over
 maybe will add instruction...
-
 choices
 > (BoxA) <text> (BoxB)
 > (<condition> ? <instruction>) <text> (<command>)
@@ -100,6 +105,8 @@ then dividing by 0
 jump command
 <jump:> <flag>
 jump to the specified flag, if flag is not found, the command is ignored
+flag "beginning" will return to the beginning of the conversation, 
+unless it is overidden
 
 Command chain
 command chain is seperated by ";" in a condition check in command box B

@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="Character_Resource" load_steps=2 format=3 uid="uid://c5pqkgtxdl3sn"]
+
+[ext_resource type="Script" path="res://DialogSystemScripts/Base Resources/CharacterResource.gd" id="1_bm58a"]
+
+[resource]
+resource_name = "Red"
+script = ExtResource("1_bm58a")
+name_ = "Red"
+atlasYpos = 2
+nameColor = Color(0.987258, 0.068347, 0.129436, 1)
+toneList = Array[String](["default", "smile", "happy"])

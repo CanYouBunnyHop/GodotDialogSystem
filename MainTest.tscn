@@ -1,13 +1,10 @@
 [gd_scene load_steps=8 format=3 uid="uid://b2wuwiadupfke"]
 
 [ext_resource type="Script" path="res://DialogSystemScripts/DialogSystem.gd" id="1_x0n5c"]
-[ext_resource type="Texture2D" uid="uid://dl6av4owco02k" path="res://testPortrait.png" id="2_nal4n"]
+[ext_resource type="PackedScene" uid="uid://cm5mc3ql0fs1r" path="res://ResourceTest.tscn" id="2_g4325"]
 [ext_resource type="Script" path="res://CustomBBTags/CustomBBTag_ghost.gd" id="3_udcrh"]
+[ext_resource type="Texture2D" uid="uid://c0fdqpws140qe" path="res://txt files/testPortrait.png" id="3_wrajl"]
 [ext_resource type="Script" path="res://CustomBBTags/CustomBBTag_matrix.gd" id="4_akrjr"]
-
-[sub_resource type="AtlasTexture" id="AtlasTexture_45a1b"]
-atlas = ExtResource("2_nal4n")
-region = Rect2(6, 6, 20, 19)
 
 [sub_resource type="RichTextEffect" id="RichTextEffect_pwlq5"]
 script = ExtResource("3_udcrh")
@@ -15,7 +12,7 @@ script = ExtResource("3_udcrh")
 [sub_resource type="RichTextEffect" id="RichTextEffect_dhnip"]
 script = ExtResource("4_akrjr")
 
-[node name="DialogSystem" type="Control" node_paths=PackedStringArray("buttonContainer", "dialogBox")]
+[node name="DialogSystem" type="Control" node_paths=PackedStringArray("buttonContainer", "dialogBox", "dialogPortrait", "settings")]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -26,6 +23,34 @@ script = ExtResource("1_x0n5c")
 file = "res://txt files/TextTests.txt"
 buttonContainer = NodePath("Button Container")
 dialogBox = NodePath("Panel/RichTextLabel")
+dialogPortrait = NodePath("Panel/DialogPortrait")
+settings = NodePath("DialogSystemSettings")
+
+[node name="DialogSystemSettings" parent="." instance=ExtResource("2_g4325")]
+editor_description = "editor_description"
+modulate = Color(0, 0, 0, 1)
+self_modulate = Color(0, 0, 0, 1)
+show_behind_parent = true
+top_level = true
+light_mask = 0
+visibility_layer = 0
+y_sort_enabled = true
+use_parent_material = true
+clip_contents = true
+layout_mode = 0
+anchors_preset = 0
+anchor_right = 0.0
+anchor_bottom = 0.0
+grow_horizontal = 0
+grow_vertical = 0
+scale = Vector2(1e-05, 1e-05)
+size_flags_horizontal = 0
+size_flags_vertical = 0
+size_flags_stretch_ratio = 0.0
+tooltip_text = "tooltip_text"
+theme_type_variation = &"theme_type_variation"
+chResources = Array[Resource]([])
+useOverrideNameColor = null
 
 [node name="Panel" type="Panel" parent="."]
 layout_mode = 0
@@ -34,19 +59,22 @@ offset_top = 517.0
 offset_right = 1134.0
 offset_bottom = 627.0
 
-[node name="Sprite2D" type="Sprite2D" parent="Panel"]
+[node name="DialogPortrait" type="Sprite2D" parent="Panel"]
 position = Vector2(66, 56)
-scale = Vector2(3.09375, 3.09375)
-texture = SubResource("AtlasTexture_45a1b")
+scale = Vector2(3.09375, 2.79719)
+texture = ExtResource("3_wrajl")
+hframes = 7
+vframes = 4
+frame = 22
 
 [node name="RichTextLabel" type="RichTextLabel" parent="Panel"]
 layout_mode = 1
 offset_left = 146.0
 offset_top = 22.0
 offset_right = 646.0
-offset_bottom = 522.0
+offset_bottom = 474.0
 bbcode_enabled = true
-text = "This is a textbox
+text = "[color=red][color=teal]This is a textbox[/color][/color]
 [b]bold [i]bold italic[/b] italic[/i] = invalid entanglement
 [b]bold [i]bold italic[/i][/b] [i]italic[/i] = valid
 
@@ -67,6 +95,8 @@ text = "This is a textbox
 [matrix clean=5 dirty=6 span=1] op is the king dude my man [/matrix]
 
 "
+scroll_active = false
+shortcut_keys_enabled = false
 custom_effects = [SubResource("RichTextEffect_pwlq5"), SubResource("RichTextEffect_dhnip")]
 
 [node name="Button Container" type="VBoxContainer" parent="."]
@@ -86,8 +116,3 @@ text = "A"
 visible = false
 layout_mode = 2
 text = "A"
-
-[node name="TestPortrait" type="Sprite2D" parent="."]
-position = Vector2(110, 690)
-texture = ExtResource("2_nal4n")
-hframes = 7

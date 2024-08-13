@@ -1,6 +1,10 @@
-[gd_scene load_steps=2 format=3 uid="uid://cm5mc3ql0fs1r"]
+[gd_scene load_steps=6 format=3 uid="uid://cm5mc3ql0fs1r"]
 
-[ext_resource type="Script" path="res://CharacterResourcePreloader.gd" id="1_plx3q"]
+[ext_resource type="Resource" uid="uid://bbrft3uw3upox" path="res://DialogSystemScripts/Character Resources/Blue.tres" id="1_id7ty"]
+[ext_resource type="Script" path="res://DialogSystemSettings.gd" id="1_plx3q"]
+[ext_resource type="Resource" uid="uid://csfqkxwa5k5qc" path="res://DialogSystemScripts/Character Resources/Non-ch.tres" id="2_1ecvv"]
+[ext_resource type="Resource" uid="uid://c5pqkgtxdl3sn" path="res://DialogSystemScripts/Character Resources/Red.tres" id="3_qd6x8"]
+[ext_resource type="Resource" uid="uid://d22ejuu3q5xk1" path="res://DialogSystemScripts/Character Resources/TestCh.tres" id="4_g1kto"]
 
 [node name="testing" type="Control"]
 layout_mode = 3
@@ -10,4 +14,6 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_plx3q")
-charResDirectory = "res://DialogSystemScripts/CharacterResource"
+chResources = Array[Resource]([ExtResource("1_id7ty"), ExtResource("2_1ecvv"), ExtResource("3_qd6x8"), ExtResource("4_g1kto")])
+defaultNameColor = null
+defaultDialogColor = null

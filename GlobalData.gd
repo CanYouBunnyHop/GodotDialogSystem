@@ -1,7 +1,7 @@
 class_name Global_Data extends Node
 static var data : Dictionary = {"a":false,"b":10}
-static var characterDataDict : Dictionary = {"Red":{"color": Color.RED.to_html()}}
-static var formatDict : Dictionary = {}
+static var characterDataDict : Dictionary
+static var placeHolderDict : Dictionary = {}
 #static var keyRegex = RegEx.new()
 #g2 is int, g3 is bool , g4 is name
 #static var valueRegex = RegEx.new() #((\d+)|(true|false)|([a-zA-Z]+))

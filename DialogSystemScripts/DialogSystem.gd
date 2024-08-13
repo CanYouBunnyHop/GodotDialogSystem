@@ -1,39 +1,33 @@
 class_name Dialog_System extends Node
 
 var currentLine :int = -1
-var flagDict : Dictionary = {}
+var flagDict : Dictionary = {"beginning": 0}
 var currentConversation : Array[String] = []
 
 #@export var characterNames : Dictionary = {} #for determining color names
 @export_file("*.txt") var file
 @export var buttonContainer : Node
 @export var dialogBox : RichTextLabel
+@export var dialogPortrait : Sprite2D
+@export var settings : Dialog_System_Settings
 
 var lineCaptureRegex = RegEx.new()
 var buttonInstructRegex = RegEx.new() #(?<Instruction>disable:)
 var flagRegex = RegEx.new() #^--(?<Flag>\s*\w+\s*)--
+
+
 var lockScene : bool = false
 # Called when the node enters the scene tree for the first time.
 func _ready():
-	lineCaptureRegex.compile(r'^(?:(?<Button>>\s*)|)(?:(?<BoxA>\(.*?\))|)(?:(?<Line>(?:(?<Name>\w+):|)(?:(?<Dialog>.*(?=\/)|.*))(?:(?<Tone>\/\w+)|))(?=\()|(?&Line))(?<BoxB>(?&BoxA)$|)')
+	lineCaptureRegex.compile(r'^(?:(?<Button>>\s*)|)(?:(?<BoxA>\(.*?\))|)(?:(?<Line>(?:(?<Name>\w+):|)(?:(?<Dialog>.*(?=\/)|.*))(?:\/\s*(?<Tone>\w*)(?<BBCmd>\s*\[.*]|)|))(?=\()|(?&Line))(?<BoxB>(?&BoxA)$|)')
 	buttonInstructRegex.compile(r'(?<Instruction>\bdisable:|\bhide:)')
 	flagRegex.compile(r'^--(?<Flag>\s*\w+\s*)--')
 	read_conversationFile(file)
 	print("Array size = {size}".format({"size": currentConversation.size()}))
-	
 	#for testing
 	Command_Listener.currentDialogSystem = self
-	
-	#var temp = "dude ass dude"
-	#var col = Color.AQUA.to_html()
-	#var beforeFormat = "%s"+temp+"%s"
-	#var afterFormat = beforeFormat%["[color={c}]","[/color]"]
-	#var applyColor = afterFormat.format({"c":col})
-	#dialogBox.text = applyColor
-	#var redData = Global_Data.characterDataDict["Red"]
-	#print(redData.has("color"))
-	
 	#start_from_beginning()
+	display_portrait("Red")
 func start_from_beginning():
 	currentLine = -1
 	play_next_dialog()
@@ -41,9 +35,8 @@ func _process(_delta):
 	if Input.is_action_just_pressed("Interact") and !lockScene:
 		play_next_dialog()
 func read_conversationFile(filename : String):
-	var flagName = "start"
 	var f = FileAccess.open(filename, FileAccess.READ)
-	if f.file_exists(filename):
+	if FileAccess.file_exists(filename):
 		while !f.eof_reached():
 			var line = f.get_line().strip_edges(true, false) #strips white spaces from left
 			var isComment = line.begins_with("#")
@@ -51,7 +44,7 @@ func read_conversationFile(filename : String):
 				continue
 			var flag = flagRegex.search(line)
 			if flag != null: 
-				flagName = flag.get_string("Flag").strip_edges()
+				var flagName = flag.get_string("Flag").strip_edges()
 				flagDict[flagName] = currentConversation.size()-1
 				continue
 			currentConversation.append(line)
@@ -66,7 +59,7 @@ func get_line(_n = 0)->String:
 		return line.strip_edges()
 
 func play_next_dialog(_flagName : String = ""):
-	if _flagName != "":
+	if _flagName != "": #if flag exist, go to flag
 		currentLine = flagDict[_flagName] - 1
 	if currentLine >= currentConversation.size()-1: #if the conversation is over, returns
 		print("end conversation")
@@ -81,7 +74,8 @@ func play_next_dialog(_flagName : String = ""):
 			break
 	var currentCaptures : Dictionary = capture_line(get_line())
 	if read_boxA_condition(currentCaptures["boxA"]) and not currentCaptures["isChoice"]:
-		display_dialogLine(currentCaptures["dialogLine"], currentCaptures["name"])
+		display_dialogLine(currentCaptures["dialogLine"], currentCaptures["name"], currentCaptures["bbcmd"])
+		display_portrait(currentCaptures["name"], currentCaptures["tone"])
 	#display buttons
 	while capture_line(get_line())["isChoice"]:#lineCaptureRegex.search(get_line()).get_string("Button").is_empty(): # while currentline is a choice, loops
 		create_choice_button(get_line()) #ceate button
@@ -104,13 +98,15 @@ func capture_line(_line:String = get_line())-> Dictionary:
 	var boxB = line.get_string("BoxB")
 	var name_ = line.get_string("Name")
 	var tone = line.get_string("Tone")
+	var bbcmd = line.get_string("BBCmd")
 	var dialogLine = line.get_string("Dialog")
 	return {
 	"isChoice":isChoice,
 	"boxA":boxA, 
 	"boxB":boxB, 
 	"name": name_, 
-	"tone":tone, 
+	"tone":tone,
+	"bbcmd":bbcmd, 
 	"dialogLine" : dialogLine}
 	
 func create_choice_button(_line):
@@ -153,23 +149,49 @@ func create_choice_button(_line):
 	choiceButt.disabled = isDisabled
 	choiceButt.pressed.connect(func(): buttonCommands.call())
 	
-func display_dialogLine(dialogLine: String, _name:String = "", _tone:String = ""):
-	var applyColor = func(_text:String, _color:String)->String:
-		var beforeFormat = "%s"+_text+"%s"
-		var afterFormat = beforeFormat%["[color={c}]","[/color]"]
-		var result = afterFormat.format({"c":_color})
-		return result
-	var col = Color.WHITE.to_html()
-	if Global_Data.characterDataDict.has(_name):
-		var curCharacterData = Global_Data.characterDataDict[_name]
-		if curCharacterData.has("color"):
-			col = curCharacterData["color"]
-	var BBName = applyColor.call(_name, col)
+func display_dialogLine(dialogLine: String, _name:String = "", _bbcmd:String = ""):
+	var gChData = Global_Data.characterDataDict
+	var nameCol = Color.WHITE.to_html()
+	var curCharacterData : Character_Resource
+	if settings.useOverrideNameColor != null:
+		nameCol = settings.useOverrideNameColor.to_html()
+	elif gChData.has(_name) && gChData[_name] is Character_Resource:
+		curCharacterData = gChData[_name]
+		nameCol = curCharacterData.nameColorHex
+		
+	var BBName = applyColor(_name, nameCol)
 	var BoldBBName = apply_bbcode(BBName+":","b")
+	if _bbcmd != "":
+		_bbcmd = _bbcmd.trim_prefix("[").trim_suffix("]").strip_edges()
+		var bbcmdChain = _bbcmd.split(",")
+		for bb in bbcmdChain:
+			dialogLine = apply_bbcode(dialogLine, bb.strip_edges())
 	dialogBox.text = BoldBBName + dialogLine
 	print(str(currentLine) + ":" + get_line())
-func apply_bbcode(_text: String, _BBTag:String, _override: String = "")->String:
-	var result = "[{0}{1}]{2}[/{0}]".format([_BBTag, _override, _text])
+	
+func display_portrait(_name:String = "", _tone:String = ""):
+	var gChData = Global_Data.characterDataDict
+	var chData : Character_Resource
+	if gChData.has(_name):
+		dialogPortrait.visible = true
+		chData  = gChData[_name]
+		var y = chData.atlasYpos
+		var x = chData.get_tone_x_pos(_tone)
+		var coords = Vector2i(x,y)
+		var clampVec = Vector2i(dialogPortrait.hframes, dialogPortrait.vframes)
+		dialogPortrait.frame_coords = coords.clamp(Vector2i(0,0), clampVec)
+	else:
+		dialogPortrait.visible = false
+	
+	
+func applyColor (_text:String, _color:String)->String:
+	var beforeFormat = "%s"+_text+"%s"
+	var afterFormat = beforeFormat%["[color={c}]","[/color]"]
+	var result = afterFormat.format({"c":_color})
+	return result
+
+func apply_bbcode(_text: String, _BBTag:String)->String:
+	var result = "[{0}]{1}[/{0}]".format([_BBTag, _text])
 	return result
 func end_conversation():
 	pass

@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="Character_Resource" load_steps=2 format=3 uid="uid://d22ejuu3q5xk1"]
+
+[ext_resource type="Script" path="res://DialogSystemScripts/Base Resources/CharacterResource.gd" id="1_bc4as"]
+
+[resource]
+script = ExtResource("1_bc4as")
+name_ = "Test"
+texCoord = Vector2(0, 0)
+nameColor = Color(1, 1, 1, 1)
+toneDict = {
+"/angry": []
+}

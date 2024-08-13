@@ -1,3 +1,3 @@
-Red: My color is red/s
-Blue: My color is blue/s
-Purple: My color is purple/s
+Red: My color is red/s[shake, i, rainbow]
+Red: My color is blue/smile
+Red: My color is purple/s[b]
