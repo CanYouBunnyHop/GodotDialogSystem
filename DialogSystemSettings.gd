@@ -16,7 +16,10 @@ class_name Dialog_System_Settings extends Node
 @export var formatdict: Dictionary
 @export_group("Override Dialog Settings")
 var useOverrideNameColor
-
+var testDict : Dictionary
+const TREE = {
+	
+}
 func _get_property_list():
 	var properties = []
 	properties.append_array([
