@@ -5,6 +5,8 @@
 [resource]
 script = ExtResource("1_bc4as")
 name_ = "Test"
-atlasYpos = 0
+texCoord = Vector2(0, 0)
 nameColor = Color(1, 1, 1, 1)
-toneList = Array[String](["default"])
+toneDict = {
+"/angry": []
+}

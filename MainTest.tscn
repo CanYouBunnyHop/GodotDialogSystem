@@ -49,6 +49,8 @@ size_flags_vertical = 0
 size_flags_stretch_ratio = 0.0
 tooltip_text = "tooltip_text"
 theme_type_variation = &"theme_type_variation"
+chResources = Array[Resource]([])
+useOverrideNameColor = null
 
 [node name="Panel" type="Panel" parent="."]
 layout_mode = 0
