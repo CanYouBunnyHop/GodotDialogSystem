@@ -1,4 +1,4 @@
-class_name Dialog_System extends Node
+class_name DialogSystem extends Node
 
 var currentLine :int = -1
 var flagDict : Dictionary = {"beginning": 0}
@@ -9,17 +9,19 @@ var currentConversation : Array[String] = []
 @export var buttonContainer : Node
 @export var dialogBox : RichTextLabel
 @export var dialogPortrait : Sprite2D
-@export var settings : Dialog_System_Settings
+@export var settings : DialogSystemSettings
 
-var lineCaptureRegex = RegEx.new()
+var commandCaptureRegex = RegEx.new()
+var dialogCaptureRegex = RegEx.new()
 var buttonInstructRegex = RegEx.new() #(?<Instruction>disable:)
 var flagRegex = RegEx.new() #^--(?<Flag>\s*\w+\s*)--
-
 
 var lockScene : bool = false
 # Called when the node enters the scene tree for the first time.
 func _ready():
-	lineCaptureRegex.compile(r'^(?:(?<Button>>\s*)|)(?:(?<BoxA>\(.*?\))|)(?:(?<Line>(?:(?<Name>\w+):|)(?:(?<Dialog>.*(?=\/)|.*))(?:\/\s*(?<Tone>\w*)(?<BBCmd>\s*\[.*]|)|))(?=\()|(?&Line))(?<BoxB>(?&BoxA)$|)')
+	commandCaptureRegex.compile(r'^(?:(?<Button>>\s*)|)(?:(?:\((?<BoxA>[^\(\)]*)\))|)(?<Line>[^\(]*)\s*(?:(?:\((?<BoxB>[^\(\)]*)\))|)')
+	dialogCaptureRegex.compile(r'(?:(?<Name>.*):|)(?:(?<Dialog>[^\[]*))(?:\s*\[(?<BBTag>.*)]|)')
+	#lineCaptureRegex.compile(r'^(?:(?<Button>>\s*)|)(?:(?:\((?<BoxA>[^\(\)]*)\))|)((?:(?<Name>\w+):|)(?:(?<Dialog>[^\/\(\[]*)))(?:\/|)(?(?<=\/)\s*(?<Tone>\w*)|)(?:\s*\[(?<BBCmd>.*)]|)\s*(?:(?:\((?<BoxB>[^\(\)]*)\))|)')
 	buttonInstructRegex.compile(r'(?<Instruction>\bdisable:|\bhide:)')
 	flagRegex.compile(r'^--(?<Flag>\s*\w+\s*)--')
 	read_conversationFile(file)
@@ -27,7 +29,8 @@ func _ready():
 	#for testing
 	Command_Listener.currentDialogSystem = self
 	#start_from_beginning()
-	display_portrait("Red")
+	#display_portrait("Red")
+	#print("%d:%d/%d:Texture2D" % [TYPE_ARRAY, TYPE_OBJECT, PROPERTY_HINT_RESOURCE_TYPE])
 func start_from_beginning():
 	currentLine = -1
 	play_next_dialog()
@@ -64,18 +67,18 @@ func play_next_dialog(_flagName : String = ""):
 	if currentLine >= currentConversation.size()-1: #if the conversation is over, returns
 		print("end conversation")
 		return
-		
+	var snapshot : Dictionary
 	while true:
 		currentLine += 1
-		var snapshot : Dictionary = capture_line(get_line())
+		snapshot = capture_line(get_line())
 		var isChoice = snapshot["isChoice"]
 		var boxA = snapshot["boxA"]
 		if isChoice or read_boxA_condition(boxA) == true:
 			break
-	var currentCaptures : Dictionary = capture_line(get_line())
-	if read_boxA_condition(currentCaptures["boxA"]) and not currentCaptures["isChoice"]:
-		display_dialogLine(currentCaptures["dialogLine"], currentCaptures["name"], currentCaptures["bbcmd"])
-		display_portrait(currentCaptures["name"], currentCaptures["tone"])
+	snapshot = capture_line(get_line())
+	if read_boxA_condition(snapshot["boxA"]) and not snapshot["isChoice"]:
+		display_dialogLine(snapshot["dialog"], snapshot["name"], snapshot["bbtag"])
+		#display_portrait(currentCaptures["name"], currentCaptures["tone"])
 	#display buttons
 	while capture_line(get_line())["isChoice"]:#lineCaptureRegex.search(get_line()).get_string("Button").is_empty(): # while currentline is a choice, loops
 		create_choice_button(get_line()) #ceate button
@@ -86,28 +89,33 @@ func play_next_dialog(_flagName : String = ""):
 		
 func read_boxA_condition(boxA:String)-> bool:
 	if boxA.is_empty(): return true
-	var content = boxA.trim_prefix("(").trim_suffix(")")
-	if content.strip_edges().is_empty(): return true
-	var condition = Command_Listener.read_condition(content)
+	if boxA.strip_edges().is_empty(): return true
+	var condition = Command_Listener.read_condition(boxA)
 	return condition
 	
 func capture_line(_line:String = get_line())-> Dictionary:
-	var line = lineCaptureRegex.search(_line)
-	var isChoice = !line.get_string("Button").is_empty()
-	var boxA = line.get_string("BoxA")
-	var boxB = line.get_string("BoxB")
-	var name_ = line.get_string("Name")
-	var tone = line.get_string("Tone")
-	var bbcmd = line.get_string("BBCmd")
-	var dialogLine = line.get_string("Dialog")
+	var regEx_return = func(rmatch : RegExMatch, group : String)-> String:
+		if rmatch.get_string(group) != null:
+			return rmatch.get_string(group)
+		else: return ""
+	var cmd = commandCaptureRegex.search(_line)
+	var line = regEx_return.call(cmd, "Line")#cmd.get_string("Line")
+	var	dialogLine = dialogCaptureRegex.search(line)
+	
+	var isChoice = !cmd.get_string("Button").is_empty()
+	var boxA = cmd.get_string("BoxA")
+	var boxB = cmd.get_string("BoxB")
+	var name_ = regEx_return.call(dialogLine,"Name")
+	var	dialog = regEx_return.call(dialogLine,"Dialog")
+	var bbtag =  regEx_return.call(dialogLine,"BBTag")
 	return {
 	"isChoice":isChoice,
 	"boxA":boxA, 
 	"boxB":boxB, 
-	"name": name_, 
-	"tone":tone,
-	"bbcmd":bbcmd, 
-	"dialogLine" : dialogLine}
+	"name": name_,
+	"dialog" : dialog, 
+	"bbtag":bbtag, 
+	}
 	
 func create_choice_button(_line):
 	#if the first cmd box exist and condition is false, return
@@ -115,7 +123,7 @@ func create_choice_button(_line):
 	var boxA = captures["boxA"]
 	var boxAcondition = read_boxA_condition(boxA)
 	var boxB = captures["boxB"]
-	var choiceText = ">"+captures["dialogLine"]
+	var choiceText = ">"+captures["dialog"]
 	
 	var getInstruction = func()->String:
 		if boxA.is_empty(): return ""
@@ -125,8 +133,7 @@ func create_choice_button(_line):
 		return Instruction
 	var buttonCommands = func():
 		if !boxB.is_empty():
-			var boxBcontent = boxB.trim_prefix("(").trim_suffix(")")#get the content of the box
-			Command_Listener.handle_input(boxBcontent) #connect cmds to button
+			Command_Listener.handle_input(boxB) #connect cmds to button
 		for b in buttonContainer.get_children():
 			b.queue_free()
 			lockScene = false
@@ -149,40 +156,38 @@ func create_choice_button(_line):
 	choiceButt.disabled = isDisabled
 	choiceButt.pressed.connect(func(): buttonCommands.call())
 	
-func display_dialogLine(dialogLine: String, _name:String = "", _bbcmd:String = ""):
+func display_dialogLine(dialogLine: String, _name:String = "", _bbtag:String = ""):
 	var gChData = Global_Data.characterDataDict
 	var nameCol = Color.WHITE.to_html()
-	var curCharacterData : Character_Resource
+	var curCharacterData : CharacterBaseResource
 	if settings.useOverrideNameColor != null:
 		nameCol = settings.useOverrideNameColor.to_html()
-	elif gChData.has(_name) && gChData[_name] is Character_Resource:
+	elif gChData.has(_name) && gChData[_name] is CharacterBaseResource:
 		curCharacterData = gChData[_name]
 		nameCol = curCharacterData.nameColorHex
 		
 	var BBName = applyColor(_name, nameCol)
 	var BoldBBName = apply_bbcode(BBName+":","b")
-	if _bbcmd != "":
-		_bbcmd = _bbcmd.trim_prefix("[").trim_suffix("]").strip_edges()
-		var bbcmdChain = _bbcmd.split(",")
-		for bb in bbcmdChain:
+	if _bbtag != "":
+		var bbtagChain = _bbtag.split(",")
+		for bb in bbtagChain:
 			dialogLine = apply_bbcode(dialogLine, bb.strip_edges())
 	dialogBox.text = BoldBBName + dialogLine
 	print(str(currentLine) + ":" + get_line())
 	
-func display_portrait(_name:String = "", _tone:String = ""):
-	var gChData = Global_Data.characterDataDict
-	var chData : Character_Resource
-	if gChData.has(_name):
-		dialogPortrait.visible = true
-		chData  = gChData[_name]
-		var y = chData.atlasYpos
-		var x = chData.get_tone_x_pos(_tone)
-		var coords = Vector2i(x,y)
-		var clampVec = Vector2i(dialogPortrait.hframes, dialogPortrait.vframes)
-		dialogPortrait.frame_coords = coords.clamp(Vector2i(0,0), clampVec)
-	else:
-		dialogPortrait.visible = false
-	
+#func display_portrait(_name:String = "", _tone:String = ""):
+	#var gChData = Global_Data.characterDataDict
+	#var chData : CharacterBaseResource
+	#if gChData.has(_name):
+		#dialogPortrait.visible = true
+		#chData  = gChData[_name]
+		#var y = chData.atlasYpos
+		#var x = chData.get_tone_x_pos(_tone)
+		#var coords = Vector2i(x,y)
+		#var clampVec = Vector2i(dialogPortrait.hframes, dialogPortrait.vframes)
+		#dialogPortrait.frame_coords = coords.clamp(Vector2i(0,0), clampVec)
+	#else:
+		#dialogPortrait.visible = false
 	
 func applyColor (_text:String, _color:String)->String:
 	var beforeFormat = "%s"+_text+"%s"

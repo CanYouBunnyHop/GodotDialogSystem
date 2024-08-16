@@ -1,21 +1,24 @@
 @tool
-class_name Dialog_System_Settings extends Node
+class_name DialogSystemSettings extends Node
 #const chResScript = Character_Resource
 @export_category("Global Data Loader")
 @export_group("Character Resource")
-@export_dir var chResDirPath = "res://DialogSystemScripts/Character Resources"
-@export var chResources : Array[Resource]:
-	get: return chResources
-	set(value):
-		if value is Array[Resource]:
-			chResources = value 
-		else:
-			print("Parsing Invalid Resources")
+#@export_dir var chResDirPath = "res://DialogSystemScripts/Character Resources"
+@export var chResources : Array[CharacterBaseResource]
+	#get: return chResources
+	#set(value):
+		#if value is Array[Character_Resource]:
+			#chResources = value 
+		#else:
+			#chResources = Array[Character_Resource.new()].new()
+			#print("Parsing Invalid Resources")
+@export var chResDict : Dictionary
 @export_group("Text Placeholders")
 #@export_file("*.csv") var formatCSVPath
 @export var formatdict: Dictionary
 @export_group("Override Dialog Settings")
 var useOverrideNameColor
+var testVar
 
 func _get_property_list():
 	var properties = []
@@ -25,6 +28,13 @@ func _get_property_list():
 		usage = PROPERTY_USAGE_DEFAULT | PROPERTY_USAGE_CHECKABLE,
 		type = TYPE_COLOR,
 	},
+	{
+		name = "testVar",
+		usage = PROPERTY_USAGE_DEFAULT,
+		type = TYPE_ARRAY,
+		hint = PROPERTY_HINT_TYPE_STRING,
+		hint_string = "%d:" % [TYPE_DICTIONARY]
+	}
 	])
 	return properties
 func _get(property):
@@ -38,7 +48,7 @@ func _set(property, value):
 	
 func _ready():
 	print("Ready")
-	chResources = get_resources_from_dir(chResDirPath)
+	#chResources = get_resources_from_dir(chResDirPath)
 	Global_Data.characterDataDict = make_character_resource_dict()
 func get_resources_from_dir(_dirPath : String) -> Array[Resource]:
 	var resources : Array[Resource] = []

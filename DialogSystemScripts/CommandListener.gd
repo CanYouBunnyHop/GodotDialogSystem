@@ -2,10 +2,12 @@ class_name Command_Listener extends Node
 var globaldata : 
 	get: return Global_Data.data
 
-static var currentDialogSystem : Dialog_System
+static var currentDialogSystem : DialogSystem
 static var conditionRegex = RegEx.new()
+static var conditionRegex2 = RegEx.new()
 var conditionPrefixRegex = RegEx.new()
 var statementRegex = RegEx.new()
+var statementRegex2 = RegEx.new()
 var jumpRegex = RegEx.new()
 
 static var commandList : Array[Command]
@@ -20,7 +22,9 @@ func _ready():
 		]
 	conditionPrefixRegex.compile(r'^(if:|elif:|else:)')
 	conditionRegex.compile(r'(?<Condition>(?<Subject>[a-zA-Z]+)\s+(?:(?<IntCom>==|!=|<|<=|>|>=)\s+(?<IntObj>\d+|)|(?<BoolCom>is|is_not)\s+(?<BoolObj>true|false|[a-zA-Z]+)))(?:\s+(?<Keyword>and|or)|)(?(Keyword)(?<ConditionB>\s+(?&Condition)))\s*\?')
+	conditionRegex2.compile(r'(?<Condition>(?<Subject>%[a-zA-Z]+)\s+(?:(?<IntCom>==|!=|<|<=|>|>=)\s+(?<IntObj>\d+|%[a-zA-Z]+)|(?<BoolCom>is|is_not)\s+(?<BoolObj>true|false|%[a-zA-Z]+)|(?<StrCom>same|diff)\s+(?<StrObj>"[]*"|%[a-zA-Z]+)))(?:\s+(?<Keyword>and|or)|)(?(Keyword)(?<ConditionB>\s+(?&Condition)))\s*\?')
 	statementRegex.compile(r'(?:then:\s*(?<Target>[a-zA-z]+)\s+(?:(?<IntOp>=|\+=|-=|\*=|\/=)\s*(?<IntVal>\d+|[a-zA-z]+)|(?<BoolOp>is|is_not)\s+(?<BoolVal>true|false|[a-zA-z]+)))')
+	statementRegex2.compile(r'(?:then:\s*(?<Target>%[a-zA-z]+)\s+(?:(?<IntOp>=|\+=|-=|\*=|\/=)\s*(?<IntVal>\d+|%[a-zA-z]+)|(?<BoolOp>is|is_not)\s+(?<BoolVal>true|false|%[a-zA-z]+)|(?<StrOp>same|prefix|suffix|prefix_|suffix_)\s+(?<StrVal>".*"|%[a-zA-Z]+)))')
 	jumpRegex.compile(r'(?:jump:(?:\s*)(?<Flag>\w+\s*?))')
 	#Command_Listener.handle_input("if: a is true ? then: b is false; else: then: b is true")
 	

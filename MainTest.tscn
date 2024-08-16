@@ -1,10 +1,23 @@
-[gd_scene load_steps=8 format=3 uid="uid://b2wuwiadupfke"]
+[gd_scene load_steps=12 format=3 uid="uid://b2wuwiadupfke"]
 
 [ext_resource type="Script" path="res://DialogSystemScripts/DialogSystem.gd" id="1_x0n5c"]
-[ext_resource type="PackedScene" uid="uid://cm5mc3ql0fs1r" path="res://ResourceTest.tscn" id="2_g4325"]
+[ext_resource type="Script" path="res://DialogSystemSettings.gd" id="2_ikj4e"]
+[ext_resource type="Script" path="res://DialogSystemScripts/Base Resources/CharacterBaseResource.gd" id="3_qhvnt"]
 [ext_resource type="Script" path="res://CustomBBTags/CustomBBTag_ghost.gd" id="3_udcrh"]
 [ext_resource type="Texture2D" uid="uid://c0fdqpws140qe" path="res://txt files/testPortrait.png" id="3_wrajl"]
 [ext_resource type="Script" path="res://CustomBBTags/CustomBBTag_matrix.gd" id="4_akrjr"]
+[ext_resource type="Script" path="res://DialogSystemScripts/Base Resources/ToneBaseResource.gd" id="4_rfuth"]
+
+[sub_resource type="Resource" id="Resource_747pn"]
+script = ExtResource("4_rfuth")
+toneInput = ""
+texCoord = Vector2i(0, 0)
+
+[sub_resource type="Resource" id="Resource_vw065"]
+script = ExtResource("3_qhvnt")
+name_ = "Red"
+nameColor = Color(0.897307, 0.00902574, 3.85046e-07, 1)
+toneList = Array[ExtResource("4_rfuth")]([SubResource("Resource_747pn")])
 
 [sub_resource type="RichTextEffect" id="RichTextEffect_pwlq5"]
 script = ExtResource("3_udcrh")
@@ -26,31 +39,11 @@ dialogBox = NodePath("Panel/RichTextLabel")
 dialogPortrait = NodePath("Panel/DialogPortrait")
 settings = NodePath("DialogSystemSettings")
 
-[node name="DialogSystemSettings" parent="." instance=ExtResource("2_g4325")]
-editor_description = "editor_description"
-modulate = Color(0, 0, 0, 1)
-self_modulate = Color(0, 0, 0, 1)
-show_behind_parent = true
-top_level = true
-light_mask = 0
-visibility_layer = 0
-y_sort_enabled = true
-use_parent_material = true
-clip_contents = true
-layout_mode = 0
-anchors_preset = 0
-anchor_right = 0.0
-anchor_bottom = 0.0
-grow_horizontal = 0
-grow_vertical = 0
-scale = Vector2(1e-05, 1e-05)
-size_flags_horizontal = 0
-size_flags_vertical = 0
-size_flags_stretch_ratio = 0.0
-tooltip_text = "tooltip_text"
-theme_type_variation = &"theme_type_variation"
-chResources = Array[Resource]([])
+[node name="DialogSystemSettings" type="Node" parent="."]
+script = ExtResource("2_ikj4e")
+chResources = Array[ExtResource("3_qhvnt")]([SubResource("Resource_vw065")])
 useOverrideNameColor = null
+testVar = null
 
 [node name="Panel" type="Panel" parent="."]
 layout_mode = 0

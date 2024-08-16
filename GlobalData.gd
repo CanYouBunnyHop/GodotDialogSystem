@@ -1,7 +1,7 @@
 class_name Global_Data extends Node
 static var data : Dictionary = {"a":false,"b":10}
 static var characterDataDict : Dictionary
-static var placeHolderDict : Dictionary = {}
+#static var placeHolderDict : Dictionary = {"name": "Red", "ass" : "butt"}
 #static var keyRegex = RegEx.new()
 #g2 is int, g3 is bool , g4 is name
 #static var valueRegex = RegEx.new() #((\d+)|(true|false)|([a-zA-Z]+))
@@ -15,6 +15,8 @@ static func get_data(key : String, type: Variant.Type):
 				data[key] = false
 			TYPE_INT:
 				data[key] = 0
+			TYPE_STRING:
+				data[key] = ""
 	return data[key]
 static func set_data(target : String, value, operator:String):
 	var _tar = get_data(target, typeof(value))

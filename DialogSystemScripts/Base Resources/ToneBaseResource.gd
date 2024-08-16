@@ -1,4 +1,4 @@
-class_name Tone_Resource extends Resource
+class_name ToneBaseResource extends Resource 
 @export var toneInput : String
 @export var texCoord : Vector2i
 
