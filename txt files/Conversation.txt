@@ -1,19 +1,5 @@
-Me: You know... /concerned
-
-#Scene Title
-
-(a is true?)Me: Don't show this ()
-(a is false?)Me: Show this ()
-Me: Pizza is Italian food right? /confused
-Marl: But pineapples do belong on pizza, even if most pizza enjoyers don't agree with me
-Green: YOU'RE WRONG /anger
-Blue: I hate pinapples in general /anger
-Red: Why? pinapples are great /happy
-	> (a is false?) eat pineapple (then: a is true)
-	> (a is true?) eat pizza crust
-	> do nothing()
-OK dawg
-Sick dawg
-	> (a is true?) eat pineapple2
-	> eat your friend
-	> ass
+Jeff: This is line one[b, color=teal]
+Jeff: This is line two dddddddd dddddddd ddddddd dddddd ddddddd ddd dddd ddd
+Sam: This is line three
+Sam: This is line four
+Red: Testing

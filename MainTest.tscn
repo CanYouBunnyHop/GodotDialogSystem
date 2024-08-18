@@ -1,23 +1,12 @@
-[gd_scene load_steps=12 format=3 uid="uid://b2wuwiadupfke"]
+[gd_scene load_steps=10 format=3 uid="uid://b2wuwiadupfke"]
 
 [ext_resource type="Script" path="res://DialogSystemScripts/DialogSystem.gd" id="1_x0n5c"]
 [ext_resource type="Script" path="res://DialogSystemSettings.gd" id="2_ikj4e"]
 [ext_resource type="Script" path="res://DialogSystemScripts/Base Resources/CharacterBaseResource.gd" id="3_qhvnt"]
 [ext_resource type="Script" path="res://CustomBBTags/CustomBBTag_ghost.gd" id="3_udcrh"]
-[ext_resource type="Texture2D" uid="uid://c0fdqpws140qe" path="res://txt files/testPortrait.png" id="3_wrajl"]
+[ext_resource type="Texture2D" uid="uid://c0fdqpws140qe" path="res://testPortrait.png" id="3_wrajl"]
 [ext_resource type="Script" path="res://CustomBBTags/CustomBBTag_matrix.gd" id="4_akrjr"]
-[ext_resource type="Script" path="res://DialogSystemScripts/Base Resources/ToneBaseResource.gd" id="4_rfuth"]
-
-[sub_resource type="Resource" id="Resource_747pn"]
-script = ExtResource("4_rfuth")
-toneInput = ""
-texCoord = Vector2i(0, 0)
-
-[sub_resource type="Resource" id="Resource_vw065"]
-script = ExtResource("3_qhvnt")
-name_ = "Red"
-nameColor = Color(0.897307, 0.00902574, 3.85046e-07, 1)
-toneList = Array[ExtResource("4_rfuth")]([SubResource("Resource_747pn")])
+[ext_resource type="Resource" uid="uid://c5pqkgtxdl3sn" path="res://DialogSystemScripts/Character Resources/Red.tres" id="4_ycyqp"]
 
 [sub_resource type="RichTextEffect" id="RichTextEffect_pwlq5"]
 script = ExtResource("3_udcrh")
@@ -33,26 +22,26 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_x0n5c")
-file = "res://txt files/TextTests.txt"
-buttonContainer = NodePath("Button Container")
-dialogBox = NodePath("Panel/RichTextLabel")
-dialogPortrait = NodePath("Panel/DialogPortrait")
+file = "res://txt files/Conversation.txt"
+buttonContainer = NodePath("DialogSystemSettings/Button Container")
+dialogBox = NodePath("DialogSystemSettings/Panel/RichTextLabel")
+dialogPortrait = NodePath("DialogSystemSettings/Panel/DialogPortrait")
 settings = NodePath("DialogSystemSettings")
 
 [node name="DialogSystemSettings" type="Node" parent="."]
 script = ExtResource("2_ikj4e")
-chResources = Array[ExtResource("3_qhvnt")]([SubResource("Resource_vw065")])
+chResources = Array[ExtResource("3_qhvnt")]([ExtResource("4_ycyqp")])
+readingSpeed = null
 useOverrideNameColor = null
-testVar = null
 
-[node name="Panel" type="Panel" parent="."]
-layout_mode = 0
+[node name="Panel" type="Panel" parent="DialogSystemSettings"]
 offset_left = 25.0
 offset_top = 517.0
 offset_right = 1134.0
 offset_bottom = 627.0
+mouse_filter = 1
 
-[node name="DialogPortrait" type="Sprite2D" parent="Panel"]
+[node name="DialogPortrait" type="Sprite2D" parent="DialogSystemSettings/Panel"]
 position = Vector2(66, 56)
 scale = Vector2(3.09375, 2.79719)
 texture = ExtResource("3_wrajl")
@@ -60,52 +49,32 @@ hframes = 7
 vframes = 4
 frame = 22
 
-[node name="RichTextLabel" type="RichTextLabel" parent="Panel"]
+[node name="RichTextLabel" type="RichTextLabel" parent="DialogSystemSettings/Panel"]
 layout_mode = 1
 offset_left = 146.0
 offset_top = 22.0
 offset_right = 646.0
 offset_bottom = 474.0
+mouse_filter = 1
 bbcode_enabled = true
-text = "[color=red][color=teal]This is a textbox[/color][/color]
-[b]bold [i]bold italic[/b] italic[/i] = invalid entanglement
-[b]bold [i]bold italic[/i][/b] [i]italic[/i] = valid
-
-[b] bold text [/b]
-[i] itallic text [/i]
-[ghost freq=10 span=5] ghost [/ghost]
-
-[pulse freq=1.0 color=#ffffff40 ease=-2.0] pulsating [/pulse]
-
-[wave amp=50 freq=7 connected=1]waveppppppppppppp[/wave]
-
-[tornado radius=10.0 freq=1.0 connected=1]{tornado}[/tornado]
-
-[shake rate=20.0 level=5 connected=1] sssssshake [/shake]
-
-[rainbow freq=1.0 sat=0.8 val=0.8]{rainbow}[/rainbow]
-
-[matrix clean=5 dirty=6 span=1] op is the king dude my man [/matrix]
-
-"
+text = "tessssssssssssssssssssssssssssssss"
 scroll_active = false
 shortcut_keys_enabled = false
 custom_effects = [SubResource("RichTextEffect_pwlq5"), SubResource("RichTextEffect_dhnip")]
 
-[node name="Button Container" type="VBoxContainer" parent="."]
-layout_mode = 0
+[node name="Button Container" type="VBoxContainer" parent="DialogSystemSettings"]
 offset_left = 207.0
 offset_top = 101.0
 offset_right = 957.0
 offset_bottom = 389.0
 alignment = 1
 
-[node name="Button" type="Button" parent="Button Container"]
+[node name="Button" type="Button" parent="DialogSystemSettings/Button Container"]
 visible = false
 layout_mode = 2
 text = "A"
 
-[node name="Button2" type="Button" parent="Button Container"]
+[node name="Button2" type="Button" parent="DialogSystemSettings/Button Container"]
 visible = false
 layout_mode = 2
 text = "A"

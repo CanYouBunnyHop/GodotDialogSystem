@@ -1,0 +1,30 @@
+[color=red][color=teal]This is a textbox[/color][/color]
+[b ]bold [i]bold italic[/b] italic[/i] = invalid entanglement
+[b]bold [i]bold italic[/i][/b] [i]italic[/i] = valid
+[s]strikethrough[/s]
+[font=Comic Sans MS]but need to download text font[/font]
+[u]underline text[/u]
+
+[ghost freq=10 span=5] ghost [/ghost]
+[pulse freq=1.0 color=#ffffff40 ease=-2.0] pulsating [/pulse]
+[wave amp=50 freq=7 connected=1]waveppppppppppppp[/wave]
+[tornado radius=10.0 freq=1.0 connected=1]{tornado}[/tornado]
+[shake rate=20.0 level=5 connected=1] sssssshake [/shake]
+[rainbow freq=1.0 sat=0.8 val=0.8]{rainbow}[/rainbow]
+[matrix clean=5 dirty=6 span=1] op is the king dude my man [/matrix]
+[font_size=50]abcdefghhi[/font_size]
+[hint=ass mad]this[/hint]
+
+[ul]dotted list[/ul]
+[ol]numbered list[/ol]
+[url=stuff]this is a link[/url] need to connect meta_clicked to a function
+[outline_color=blue][outline_size=5]outline[/outline_size][/outline_color]
+
+[bgcolor=teal] this is highlighted[/bgcolor] 
+[fgcolor=red] this is redacted [/fgcolor]
+[fade start=1 length=5]this is called fading text, and it is not working very well[/fade]
+[table=2]
+[cell]{text}[/cell][cell]{text}[/cell]
+[cell]{text}[/cell][cell]{text}[/cell]
+[cell]{text}[/cell][cell]{text}[/cell]
+[/table]

@@ -33,8 +33,7 @@ only the first step is counted, and the "if:" command ID is not nessasary
 BBCode is supported, using rich text label.
 <Name> = can determine the character portraits, unique font color, displayed before the dialog
 <dialog> = dialog to be displayed
-<[BBTag]> apply BBCode to the dialog, currently does not support overriding parameters
-<instruction>
+<[BBTag]> apply BBCode to the dialog, also allows parameters override, if multiple tags are inputted split them using ","
 "" default = if condition is false, the text and command boxB will be skipped over
 maybe will add instruction...
 

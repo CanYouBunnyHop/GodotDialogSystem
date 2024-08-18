@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="FontSettingsResource" load_steps=2 format=3 uid="uid://h7cbshqyc4cw"]
+
+[ext_resource type="Script" path="res://DialogSystemScripts/Base Resources/FontSettingsResource.gd" id="1_4cfag"]
+
+[resource]
+script = ExtResource("1_4cfag")
+color = Color(1, 1, 1, 1)
+outlineColor = Color(0, 0, 0, 1)
+outlineSize = 1
+shadowColor = Color(0, 0, 0, 1)
+shadowOffset = Vector2(0, 0)

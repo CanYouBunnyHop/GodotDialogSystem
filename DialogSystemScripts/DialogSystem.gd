@@ -1,9 +1,13 @@
-class_name DialogSystem extends Node
+class_name DialogSystem extends Control
 
 var currentLine :int = -1
 var flagDict : Dictionary = {"beginning": 0}
 var currentConversation : Array[String] = []
 
+signal signal_start_convo
+signal signal_play_next
+signal signal_jump(flag:String)
+#signal signal_jump(flag:String)
 #@export var characterNames : Dictionary = {} #for determining color names
 @export_file("*.txt") var file
 @export var buttonContainer : Node
@@ -13,30 +17,34 @@ var currentConversation : Array[String] = []
 
 var commandCaptureRegex = RegEx.new()
 var dialogCaptureRegex = RegEx.new()
-var buttonInstructRegex = RegEx.new() #(?<Instruction>disable:)
-var flagRegex = RegEx.new() #^--(?<Flag>\s*\w+\s*)--
+var buttonInstructRegex = RegEx.new()
+var flagRegex = RegEx.new()
+var bbtagRegex = RegEx.new()
 
 var lockScene : bool = false
-# Called when the node enters the scene tree for the first time.
+var readTween : Tween
 func _ready():
 	commandCaptureRegex.compile(r'^(?:(?<Button>>\s*)|)(?:(?:\((?<BoxA>[^\(\)]*)\))|)(?<Line>[^\(]*)\s*(?:(?:\((?<BoxB>[^\(\)]*)\))|)')
-	dialogCaptureRegex.compile(r'(?:(?<Name>.*):|)(?:(?<Dialog>[^\[]*))(?:\s*\[(?<BBTag>.*)]|)')
-	#lineCaptureRegex.compile(r'^(?:(?<Button>>\s*)|)(?:(?:\((?<BoxA>[^\(\)]*)\))|)((?:(?<Name>\w+):|)(?:(?<Dialog>[^\/\(\[]*)))(?:\/|)(?(?<=\/)\s*(?<Tone>\w*)|)(?:\s*\[(?<BBCmd>.*)]|)\s*(?:(?:\((?<BoxB>[^\(\)]*)\))|)')
+	dialogCaptureRegex.compile(r'(?<Full>(?<Name>.*):|)(?:(?<Dialog>[^\[]*))(?:\s*\[(?<BBTag>.*)]|)')
 	buttonInstructRegex.compile(r'(?<Instruction>\bdisable:|\bhide:)')
 	flagRegex.compile(r'^--(?<Flag>\s*\w+\s*)--')
+	bbtagRegex.compile(r'^(?<Tag>\w+)(?<Param>( |=|).*)')
 	read_conversationFile(file)
 	print("Array size = {size}".format({"size": currentConversation.size()}))
 	#for testing
-	Command_Listener.currentDialogSystem = self
-	#start_from_beginning()
-	#display_portrait("Red")
-	#print("%d:%d/%d:Texture2D" % [TYPE_ARRAY, TYPE_OBJECT, PROPERTY_HINT_RESOURCE_TYPE])
-func start_from_beginning():
-	currentLine = -1
-	play_next_dialog()
-func _process(_delta):
-	if Input.is_action_just_pressed("Interact") and !lockScene:
+	var begin = func():
+		currentLine = -1
 		play_next_dialog()
+	GlobalData.currentDialogSystem = self #for testing
+	signal_start_convo.connect(begin)
+	signal_play_next.connect(play_next_dialog)
+	signal_jump.connect(play_next_dialog)
+
+#Have this in the root
+func _process(delta: float) -> void:
+	if Input.is_action_just_pressed("Interact"):
+		play_next_dialog()
+
 func read_conversationFile(filename : String):
 	var f = FileAccess.open(filename, FileAccess.READ)
 	if FileAccess.file_exists(filename):
@@ -48,7 +56,7 @@ func read_conversationFile(filename : String):
 			var flag = flagRegex.search(line)
 			if flag != null: 
 				var flagName = flag.get_string("Flag").strip_edges()
-				flagDict[flagName] = currentConversation.size()-1
+				flagDict[flagName] = currentConversation.size()
 				continue
 			currentConversation.append(line)
 	else:
@@ -62,6 +70,11 @@ func get_line(_n = 0)->String:
 		return line.strip_edges()
 
 func play_next_dialog(_flagName : String = ""):
+	if readTween and readTween.is_running():
+		readTween.kill()
+		dialogBox.visible_ratio = 1
+		return
+	if lockScene: return #if choices appeared, next dialog won't be updated
 	if _flagName != "": #if flag exist, go to flag
 		currentLine = flagDict[_flagName] - 1
 	if currentLine >= currentConversation.size()-1: #if the conversation is over, returns
@@ -90,7 +103,7 @@ func play_next_dialog(_flagName : String = ""):
 func read_boxA_condition(boxA:String)-> bool:
 	if boxA.is_empty(): return true
 	if boxA.strip_edges().is_empty(): return true
-	var condition = Command_Listener.read_condition(boxA)
+	var condition = CmdListener.read_condition(boxA)
 	return condition
 	
 func capture_line(_line:String = get_line())-> Dictionary:
@@ -105,6 +118,7 @@ func capture_line(_line:String = get_line())-> Dictionary:
 	var isChoice = !cmd.get_string("Button").is_empty()
 	var boxA = cmd.get_string("BoxA")
 	var boxB = cmd.get_string("BoxB")
+	var full = dialogLine.get_string()
 	var name_ = regEx_return.call(dialogLine,"Name")
 	var	dialog = regEx_return.call(dialogLine,"Dialog")
 	var bbtag =  regEx_return.call(dialogLine,"BBTag")
@@ -112,8 +126,9 @@ func capture_line(_line:String = get_line())-> Dictionary:
 	"isChoice":isChoice,
 	"boxA":boxA, 
 	"boxB":boxB, 
-	"name": name_,
-	"dialog" : dialog, 
+	"full":full,
+	"name":name_,
+	"dialog":dialog, 
 	"bbtag":bbtag, 
 	}
 	
@@ -123,7 +138,7 @@ func create_choice_button(_line):
 	var boxA = captures["boxA"]
 	var boxAcondition = read_boxA_condition(boxA)
 	var boxB = captures["boxB"]
-	var choiceText = ">"+captures["dialog"]
+	var choiceText = ">"+captures["full"]
 	
 	var getInstruction = func()->String:
 		if boxA.is_empty(): return ""
@@ -132,12 +147,12 @@ func create_choice_button(_line):
 		var Instruction = construct.get_string("Instruction")
 		return Instruction
 	var buttonCommands = func():
-		if !boxB.is_empty():
-			Command_Listener.handle_input(boxB) #connect cmds to button
 		for b in buttonContainer.get_children():
 			b.queue_free()
 			lockScene = false
 		dialogBox.text = choiceText
+		if !boxB.is_empty():
+			CmdListener.handle_input(boxB) #connect cmds to button
 	lockScene = true
 	var constructInstruction = getInstruction.call()
 	#boxa == false, ins == hide > return
@@ -154,25 +169,37 @@ func create_choice_button(_line):
 	choiceButt.text = choiceText
 	buttonContainer.add_child(choiceButt)
 	choiceButt.disabled = isDisabled
-	choiceButt.pressed.connect(func(): buttonCommands.call())
+	choiceButt.pressed.connect(buttonCommands)
 	
 func display_dialogLine(dialogLine: String, _name:String = "", _bbtag:String = ""):
-	var gChData = Global_Data.characterDataDict
-	var nameCol = Color.WHITE.to_html()
+	var gChData = GlobalData.characterDataDict
+	var nameCol = settings.defaultNameSettings.color.to_html()
 	var curCharacterData : CharacterBaseResource
+	var bbname = _name
 	if settings.useOverrideNameColor != null:
 		nameCol = settings.useOverrideNameColor.to_html()
 	elif gChData.has(_name) && gChData[_name] is CharacterBaseResource:
 		curCharacterData = gChData[_name]
-		nameCol = curCharacterData.nameColorHex
-		
-	var BBName = applyColor(_name, nameCol)
-	var BoldBBName = apply_bbcode(BBName+":","b")
-	if _bbtag != "":
-		var bbtagChain = _bbtag.split(",")
-		for bb in bbtagChain:
-			dialogLine = apply_bbcode(dialogLine, bb.strip_edges())
-	dialogBox.text = BoldBBName + dialogLine
+		nameCol = curCharacterData.nameFontSettings.color.to_html()
+	if !_name.is_empty():
+		bbname = apply_color(_name, nameCol)
+		bbname = apply_bbcode(bbname+":","b")
+		if _bbtag != "":
+			var bbtagChain = _bbtag.split(",")
+			for bb in bbtagChain:
+				var bbt = bbtagRegex.search(bb.strip_edges())
+				var tag = bbt.get_string("Tag")
+				var param = bbt.get_string("Param")
+				dialogLine = apply_bbcode(dialogLine, tag, param)
+	dialogBox.visible_characters = 0;
+	dialogBox.text = bbname + dialogLine
+	
+	var length = dialogBox.get_total_character_count()
+	if readTween: readTween.kill()
+	readTween = create_tween()
+	readTween.set_trans(Tween.TRANS_LINEAR)
+	readTween.set_speed_scale(settings.readingSpeed)
+	readTween.tween_property(dialogBox,"visible_characters", length, 1).from(_name.length() + 1)
 	print(str(currentLine) + ":" + get_line())
 	
 #func display_portrait(_name:String = "", _tone:String = ""):
@@ -189,14 +216,14 @@ func display_dialogLine(dialogLine: String, _name:String = "", _bbtag:String = "
 	#else:
 		#dialogPortrait.visible = false
 	
-func applyColor (_text:String, _color:String)->String:
+func apply_color (_text:String, _color:String)->String:
 	var beforeFormat = "%s"+_text+"%s"
 	var afterFormat = beforeFormat%["[color={c}]","[/color]"]
 	var result = afterFormat.format({"c":_color})
 	return result
 
-func apply_bbcode(_text: String, _BBTag:String)->String:
-	var result = "[{0}]{1}[/{0}]".format([_BBTag, _text])
+func apply_bbcode(_text: String, _BBTag:String, _BBParam:String = "")->String:
+	var result = "[{0}{2}]{1}[/{0}]".format([_BBTag, _text, _BBParam])
 	return result
 func end_conversation():
 	pass

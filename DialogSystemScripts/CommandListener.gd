@@ -1,14 +1,16 @@
-class_name Command_Listener extends Node
+class_name CommandListener extends Node
 var globaldata : 
-	get: return Global_Data.data
-
-static var currentDialogSystem : DialogSystem
+	get: return GlobalData.data
+var curSystem:
+	get: return	GlobalData.currentDialogSystem
+#static var currentDialogSystem : DialogSystem
+#static var conditionRegex = RegEx.new()
 static var conditionRegex = RegEx.new()
-static var conditionRegex2 = RegEx.new()
 var conditionPrefixRegex = RegEx.new()
+#var statementRegex = RegEx.new()
 var statementRegex = RegEx.new()
-var statementRegex2 = RegEx.new()
 var jumpRegex = RegEx.new()
+var formatRegex = RegEx.new()
 
 static var commandList : Array[Command]
 func _ready():
@@ -18,16 +20,19 @@ func _ready():
 		read_condition_container),
 		Command.new("then:", "Updates variable or creates a new one if it doesn't exist", 
 		"then: <target> <operator> <value>", validate_command_chain),
-		Command.new("jump:", "jump to a flag in the conversation", "jump: <flag>", validate_command_chain)
+		Command.new("jump:", "jump to a flag in the conversation", "jump: <flag>", validate_command_chain),
+		Command.new("emotion:", "change current portrait to specified portrait","emotion: <name> <emotion>", 
+		validate_command_chain),
+		Command.new("print:","","",func():print("success")),
 		]
 	conditionPrefixRegex.compile(r'^(if:|elif:|else:)')
-	conditionRegex.compile(r'(?<Condition>(?<Subject>[a-zA-Z]+)\s+(?:(?<IntCom>==|!=|<|<=|>|>=)\s+(?<IntObj>\d+|)|(?<BoolCom>is|is_not)\s+(?<BoolObj>true|false|[a-zA-Z]+)))(?:\s+(?<Keyword>and|or)|)(?(Keyword)(?<ConditionB>\s+(?&Condition)))\s*\?')
-	conditionRegex2.compile(r'(?<Condition>(?<Subject>%[a-zA-Z]+)\s+(?:(?<IntCom>==|!=|<|<=|>|>=)\s+(?<IntObj>\d+|%[a-zA-Z]+)|(?<BoolCom>is|is_not)\s+(?<BoolObj>true|false|%[a-zA-Z]+)|(?<StrCom>same|diff)\s+(?<StrObj>"[]*"|%[a-zA-Z]+)))(?:\s+(?<Keyword>and|or)|)(?(Keyword)(?<ConditionB>\s+(?&Condition)))\s*\?')
-	statementRegex.compile(r'(?:then:\s*(?<Target>[a-zA-z]+)\s+(?:(?<IntOp>=|\+=|-=|\*=|\/=)\s*(?<IntVal>\d+|[a-zA-z]+)|(?<BoolOp>is|is_not)\s+(?<BoolVal>true|false|[a-zA-z]+)))')
-	statementRegex2.compile(r'(?:then:\s*(?<Target>%[a-zA-z]+)\s+(?:(?<IntOp>=|\+=|-=|\*=|\/=)\s*(?<IntVal>\d+|%[a-zA-z]+)|(?<BoolOp>is|is_not)\s+(?<BoolVal>true|false|%[a-zA-z]+)|(?<StrOp>same|prefix|suffix|prefix_|suffix_)\s+(?<StrVal>".*"|%[a-zA-Z]+)))')
+	#conditionRegex.compile(r'(?<Condition>(?<Subject>[a-zA-Z]+)\s+(?:(?<IntCom>==|!=|<|<=|>|>=)\s+(?<IntObj>\d+|)|(?<BoolCom>is|is_not)\s+(?<BoolObj>true|false|[a-zA-Z]+)))(?:\s+(?<Keyword>and|or)|)(?(Keyword)(?<ConditionB>\s+(?&Condition)))\s*\?')
+	conditionRegex.compile(r'(?<Condition>(?<Subject>%[a-zA-Z]+)\s+(?:(?<IntCom>==|!=|<|<=|>|>=)\s+(?<IntObj>\d+|%[a-zA-Z]+)|(?<BoolCom>is|is_not)\s+(?<BoolObj>true|false|%[a-zA-Z]+)|(?<StrCom>same|diff)\s+(?<StrObj>"[]*"|%[a-zA-Z]+)))(?:\s+(?<Keyword>and|or)|)(?(Keyword)(?<ConditionB>\s+(?&Condition)))\s*\?')
+	#statementRegex.compile(r'(?:then:\s*(?<Target>[a-zA-z]+)\s+(?:(?<IntOp>=|\+=|-=|\*=|\/=)\s*(?<IntVal>\d+|[a-zA-z]+)|(?<BoolOp>is|is_not)\s+(?<BoolVal>true|false|[a-zA-z]+)))')
+	statementRegex.compile(r'(?:then:\s*(?<Target>%[a-zA-z]+)\s+(?:(?<IntOp>=|\+=|-=|\*=|\/=)\s*(?<IntVal>\d+|%[a-zA-z]+)|(?<BoolOp>is|is_not)\s+(?<BoolVal>true|false|%[a-zA-z]+)|(?<StrOp>same|prefix|suffix|prefix_|suffix_)\s+(?<StrVal>".*?"|%[a-zA-Z]+)))')
 	jumpRegex.compile(r'(?:jump:(?:\s*)(?<Flag>\w+\s*?))')
 	#Command_Listener.handle_input("if: a is true ? then: b is false; else: then: b is true")
-	
+
 static func handle_input(_inputFull : String):
 	var commandInputs = _inputFull.split(",", false)
 	for input in commandInputs:
@@ -42,11 +47,10 @@ static func read_condition(step:String)-> bool:
 	var subConditionA = conditionRegex.search(step)
 	var finalResults : Array = []
 	var subConditionResult = func subCondition_result(condition : RegExMatch) -> bool:
-		var subject
-		var comparator
-		var object
+		var comparator : String
+		var object : String
 		var type
-		subject = condition.get_string("Subject")
+		var subject = condition.get_string("Subject") 
 		if !condition.get_string("IntCom").is_empty():
 			comparator = condition.get_string("IntCom")
 			object = condition.get_string("IntObj")
@@ -55,31 +59,39 @@ static func read_condition(step:String)-> bool:
 			comparator = condition.get_string("BoolCom")
 			object = condition.get_string("BoolObj")
 			type = TYPE_BOOL
-		var sub = Global_Data.get_data(subject, type)
+		elif !condition.get_string("StrCom").is_empty():
+			comparator = condition.get_string("StrCom")
+			object = condition.get_string("StrObj")
+			type = TYPE_STRING
+		var sub = GlobalData.get_data(subject, type)
 		var obj
-		if type == TYPE_INT:
-			if int(object) != 0 or object == "0":
-				obj = int(object)
-			else:
-				push_warning("Warning: Invalid object: 
-					\"{object}\" of type: \"{type}\"".format({"object":object, "type":type}))
-				obj = Global_Data.get_data(object, type)
-		elif type == TYPE_BOOL:
-			match object:
-				"true":
-					obj = true
-				"false":
-					obj = false
-				_:
-					push_warning("Warning: Invalid object: 
-						\"{object}\" of type: \"{type}\"".format({"object":object, "type":type}))
-					obj = Global_Data.get_data(object, type)
+		if object.begins_with("%"):
+			obj = GlobalData.get_data(object, type)
 		else:
-			obj = Global_Data.get_data(object, type)
+			match type:
+				TYPE_INT:
+					if int(object) != 0 or object == "0":
+						obj = int(object)
+					else:
+						push_warning("Warning: Invalid object: 
+							\"{object}\" of type: \"{type}\"".format({"object":object, "type":type}))
+						obj = 0
+				TYPE_BOOL:
+					match object:
+						"true":
+							obj = true
+						"false":
+							obj = false
+						_:
+							push_warning("Warning: Invalid object: 
+								\"{object}\" of type: \"{type}\"".format({"object":object, "type":type}))
+							obj = false
+				TYPE_STRING:
+					obj = object.trim_prefix("\"").trim_suffix("\"")
 		match comparator:
-				"==","is":
+				"==","is","same":
 					return sub == obj
-				"!=","is_not":
+				"!=","is_not","diff":
 					return sub != obj
 				"<":
 					return sub < obj
@@ -93,7 +105,6 @@ static func read_condition(step:String)-> bool:
 					push_error("ERROR: Invalid command comparator: 
 						\"{c}\"".format({"c":comparator}))
 					return false
-	
 	finalResults.append(subConditionResult.call(subConditionA))
 	var keyWord = subConditionA.get_string("Keyword") if !subConditionA.get_string("Keyword").is_empty() else ""
 	match keyWord:
@@ -125,16 +136,16 @@ func read_condition_container(_arg:String):
 		var prefix = conditionPrefixRegex.search(step).get_string() #find prefix
 		step = step.trim_prefix(prefix).strip_edges() #trim if: elif: or else:
 		if prefix == "if:" or prefix == "elif:":
-			var result = Command_Listener.read_condition(step)
+			var result = CmdListener.read_condition(step)
 			var condition = conditionRegex.search(step)
 			if result == true:
 				var commandChain = step.trim_prefix(condition.get_string()).strip_edges()
-				Command_Listener.handle_input(commandChain)
+				CmdListener.handle_input(commandChain)
 				break
 			else:
 				continue
 		elif prefix == "else:": #prefix is else
-			Command_Listener.handle_input(step)
+			CmdListener.handle_input(step)
 			break
 		else:
 			push_error("Invalid Condition Container")
@@ -146,39 +157,47 @@ func validate_command_chain(input:String):
 		var target = tcmd.get_string("Target")
 		var operator
 		var value
-		var type2
+		var type
 		if !tcmd.get_string("IntOp").is_empty():
 			operator = tcmd.get_string("IntOp")
 			value = tcmd.get_string("IntVal")
-			type2 = TYPE_INT
+			type = TYPE_INT
 		elif !tcmd.get_string("BoolOp").is_empty():
 			operator = tcmd.get_string("BoolOp")
 			value = tcmd.get_string("BoolVal")
-			type2 = TYPE_BOOL
-		do_statement(target, operator, value, type2)
+			type = TYPE_BOOL
+		elif !tcmd.get_string("StrOp").is_empty():
+			operator = tcmd.get_string("StrOp")
+			value = tcmd.get_string("StrVal")
+			type = TYPE_STRING
+		do_statement(target, operator, value, type)
+	var x = jumpCommand.get_string("Flag")
+	print(x)
 	jump_statement(jumpCommand.get_string("Flag"))
-func do_statement(target:String, operator:String, value:String, type:Variant.Type):
+func do_statement(target:String, operator:String, value:String, type:Variant.Type):	
 	var val
-	if type == TYPE_INT:
-		if int(value) != 0 or value == "0":
-			val = int(value)
-		else:
-			push_warning("Warning: Invalid value: 
-				\"{value}\" of type: \"{type}\"".format({"value":value, "type":type}))
-			val = Global_Data.get_data(value, type)
-	elif type == TYPE_BOOL:
-		match value:
-			"true":
-				val = true
-			"false":
-				val = false
-			_:
-				push_warning("Warning: Invalid value: 
-					\"{value}\" of type: \"{type}\"".format({"value":value, "type":type}))
-				val = Global_Data.get_data(value, type)
-	Global_Data.set_data(target, val, operator)
-func jump_statement(flag:String):
-	if currentDialogSystem.flagDict.has(flag):
-		currentDialogSystem.play_next_dialog(flag)
-	else:
-		push_error("ERROR: Invalid flag for Jump Statement")
+	if value.begins_with("%"): #if it is getting dictionary
+		val = GlobalData.get_data(value, type)
+		GlobalData.set_data(target, val, operator)
+		return
+	match type:
+		TYPE_INT:
+			if int(value) != 0 or value == "0":
+				val = int(value)
+			else:
+				push_warning("Warning: Invalid value: \"{value}\" of type: \"{type}\"".format({"value":value, "type":type}))
+				val = 0
+		TYPE_BOOL:
+			match value:
+				"true":
+					val = true
+				"false":
+					val = false
+				_:
+					push_warning("Warning: Invalid value: \"{value}\" of type: \"{type}\"".format({"value":value, "type":type}))
+					val = false
+		TYPE_STRING:
+			val = value.trim_prefix("\"").trim_suffix("\"")
+	GlobalData.set_data(target, val, operator)
+func jump_statement(_flag : String = ""):
+	GlobalData.currentDialogSystem.signal_play_next.emit(_flag)

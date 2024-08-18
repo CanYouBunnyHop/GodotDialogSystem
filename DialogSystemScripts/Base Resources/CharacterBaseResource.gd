@@ -3,8 +3,6 @@ class_name CharacterBaseResource extends Resource
 @export_category("Portrait")
 @export var atlas : AtlasTexture
 @export_category("Text Settings")
-@export var nameColor : Color = Color.WHITE
-var nameColorHex : String:
-	get: return nameColor.to_html()
+@export var nameFontSettings : FontSettingsResource = preload("res://DialogSystemScripts/Base Resources/defaultFontSetting.tres")
 @export var toneList : Array[ToneBaseResource]
 var toneDict : Dictionary

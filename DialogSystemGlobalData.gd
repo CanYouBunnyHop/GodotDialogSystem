@@ -1,10 +1,7 @@
-class_name Global_Data extends Node
-static var data : Dictionary = {"a":false,"b":10}
+class_name DialogSystemGlobalData extends Node
+static var data : Dictionary = {"%a":false,"%b":10}
 static var characterDataDict : Dictionary
-#static var placeHolderDict : Dictionary = {"name": "Red", "ass" : "butt"}
-#static var keyRegex = RegEx.new()
-#g2 is int, g3 is bool , g4 is name
-#static var valueRegex = RegEx.new() #((\d+)|(true|false)|([a-zA-Z]+))
+static var currentDialogSystem : DialogSystem
 func _ready():
 	pass
 	#print("ass"+"\n"+"ass2")
@@ -21,7 +18,7 @@ static func get_data(key : String, type: Variant.Type):
 static func set_data(target : String, value, operator:String):
 	var _tar = get_data(target, typeof(value))
 	match operator:
-		"=","is":
+		"=","is","same":
 			data[target] = value
 		"is_not":
 			data[target] != value
@@ -35,4 +32,12 @@ static func set_data(target : String, value, operator:String):
 			if data[target] / value != 0:
 				data[target] /= value 
 			else:
-				push_warning("WARNING: tried to divide by 0")			
+				push_warning("WARNING: tried to divide by 0")
+		"prefix":
+			data[target] = value + data[target]
+		"suffix":
+			data[target] = data[target] + value 
+		"prefix_":
+			data[target] = value +" "+ data[target]
+		"suffix_":
+			data[target] + data[target] +" "+ value 
