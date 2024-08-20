@@ -24,8 +24,8 @@ var bbtagRegex = RegEx.new()
 var lockScene : bool = false
 var readTween : Tween
 func _ready():
-	commandCaptureRegex.compile(r'^(?:(?<Button>>\s*)|)(?:(?:\((?<BoxA>[^\(\)]*)\))|)(?<Line>[^\(]*)\s*(?:(?:\((?<BoxB>[^\(\)]*)\))|)')
-	dialogCaptureRegex.compile(r'(?<Full>(?<Name>.*):|)(?:(?<Dialog>[^\[]*))(?:\s*\[(?<BBTag>.*)]|)')
+	commandCaptureRegex.compile(r'^(?:(?<Button>>\s*)|)(?:(?:\((?<BoxA>[^\(\)]*)\))|)(?<Line>.*?)\s*(\((?!.*\()(?<BoxB>[^\(\)]*)\)|)$')
+	dialogCaptureRegex.compile(r'(?:^(?:(?<Name>.*):|)(?:(?<Dialog>.*?)))(\[(?!.*\[)(?<BBTag>.*)\]|)$')
 	buttonInstructRegex.compile(r'(?<Instruction>\bdisable:|\bhide:)')
 	flagRegex.compile(r'^--(?<Flag>\s*\w+\s*)--')
 	bbtagRegex.compile(r'^(?<Tag>\w+)(?<Param>( |=|).*)')
@@ -111,13 +111,13 @@ func capture_line(_line:String = get_line())-> Dictionary:
 		if rmatch.get_string(group) != null:
 			return rmatch.get_string(group)
 		else: return ""
-	var cmd = commandCaptureRegex.search(_line)
-	var line = regEx_return.call(cmd, "Line")#cmd.get_string("Line")
+	var cmdMatch = commandCaptureRegex.search(_line)
+	var line = regEx_return.call(cmdMatch,"Line")#cmd.get_string("Line")
 	var	dialogLine = dialogCaptureRegex.search(line)
 	
-	var isChoice = !cmd.get_string("Button").is_empty()
-	var boxA = cmd.get_string("BoxA")
-	var boxB = cmd.get_string("BoxB")
+	var isChoice = !cmdMatch.get_string("Button").is_empty()
+	var boxA = cmdMatch.get_string("BoxA")
+	var boxB = cmdMatch.get_string("BoxB")
 	var full = dialogLine.get_string()
 	var name_ = regEx_return.call(dialogLine,"Name")
 	var	dialog = regEx_return.call(dialogLine,"Dialog")
@@ -173,24 +173,22 @@ func create_choice_button(_line):
 	
 func display_dialogLine(dialogLine: String, _name:String = "", _bbtag:String = ""):
 	var gChData = GlobalData.characterDataDict
-	var nameCol = settings.defaultNameSettings.color.to_html()
 	var curCharacterData : CharacterBaseResource
 	var bbname = _name
-	if settings.useOverrideNameColor != null:
-		nameCol = settings.useOverrideNameColor.to_html()
-	elif gChData.has(_name) && gChData[_name] is CharacterBaseResource:
-		curCharacterData = gChData[_name]
-		nameCol = curCharacterData.nameFontSettings.color.to_html()
 	if !_name.is_empty():
-		bbname = apply_color(_name, nameCol)
+		if gChData.has(_name) && gChData[_name] is CharacterBaseResource:
+			curCharacterData = gChData[_name]
+			bbname = apply_font_setting(bbname, curCharacterData.nameFontSettings)
+		else : #use default if characterBaseResource is not found
+			bbname = apply_font_setting(bbname, settings.defaultNameSettings)
 		bbname = apply_bbcode(bbname+":","b")
-		if _bbtag != "":
-			var bbtagChain = _bbtag.split(",")
-			for bb in bbtagChain:
-				var bbt = bbtagRegex.search(bb.strip_edges())
-				var tag = bbt.get_string("Tag")
-				var param = bbt.get_string("Param")
-				dialogLine = apply_bbcode(dialogLine, tag, param)
+	if _bbtag != "":
+		var bbtagChain = _bbtag.split(",")
+		for bb in bbtagChain:
+			var bbt = bbtagRegex.search(bb.strip_edges())
+			var tag = bbt.get_string("Tag")
+			var param = bbt.get_string("Param")
+			dialogLine = apply_bbcode(dialogLine, tag, param)
 	dialogBox.visible_characters = 0;
 	dialogBox.text = bbname + dialogLine
 	
@@ -215,15 +213,22 @@ func display_dialogLine(dialogLine: String, _name:String = "", _bbtag:String = "
 		#dialogPortrait.frame_coords = coords.clamp(Vector2i(0,0), clampVec)
 	#else:
 		#dialogPortrait.visible = false
-	
-func apply_color (_text:String, _color:String)->String:
-	var beforeFormat = "%s"+_text+"%s"
-	var afterFormat = beforeFormat%["[color={c}]","[/color]"]
-	var result = afterFormat.format({"c":_color})
-	return result
 
+	
+#func apply_color (_text:String, _color:String)->String:
+	#var beforeFormat = "%s"+_text+"%s"
+	#var afterFormat = beforeFormat%["[color={c}]","[/color]"]
+	#var result = afterFormat.format({"c":_color})
+	#return result
+func apply_font_setting(_text: String, _fontSetting: FontSettingsResource)->String:
+	var result = _text
+	result = apply_bbcode(result,"color" ,"="+_fontSetting.color.to_html())
+	result = apply_bbcode(result,"outline_color" ,"="+_fontSetting.outlineColor.to_html())
+	result = apply_bbcode(result,"outline_size" ,"="+str(_fontSetting.outlineSize))
+	return result
 func apply_bbcode(_text: String, _BBTag:String, _BBParam:String = "")->String:
 	var result = "[{0}{2}]{1}[/{0}]".format([_BBTag, _text, _BBParam])
 	return result
+	
 func end_conversation():
 	pass

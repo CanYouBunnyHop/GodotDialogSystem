@@ -15,6 +15,8 @@ class_name DialogSystemSettings extends Node
 @export var defaultNameSettings : FontSettingsResource = preload("res://DialogSystemScripts/Base Resources/defaultFontSetting.tres")
 @export_group("Font Settings")
 @export var defaultFontSettings : FontSettingsResource = preload("res://DialogSystemScripts/Base Resources/defaultFontSetting.tres")
+@export var shadowColor : Color = Color.BLACK
+@export var shadowOffset : Vector2 = Vector2(0, 0)
 
 #@export var default
 @export_group("Override Dialog Settings")
@@ -25,10 +27,10 @@ func _ready() -> void:
 	if defaultNameSettings == null : defaultNameSettings = FontSettingsResource.new()
 	dialogBox.add_theme_color_override("default_color", defaultFontSettings.color)
 	dialogBox.add_theme_color_override("font_outline_color", defaultFontSettings.outlineColor)
-	dialogBox.add_theme_color_override("font_shadow_color", defaultFontSettings.shadowColor)
 	dialogBox.add_theme_constant_override("outline_size", defaultFontSettings.outlineSize)
-	dialogBox.add_theme_constant_override("shadow_offset_y", defaultFontSettings.shadowOffset.y)
-	dialogBox.add_theme_constant_override("shadow_offset_x", defaultFontSettings.shadowOffset.x)
+	dialogBox.add_theme_color_override("font_shadow_color", shadowColor)
+	dialogBox.add_theme_constant_override("shadow_offset_y", shadowOffset.y)
+	dialogBox.add_theme_constant_override("shadow_offset_x", shadowOffset.x)
 	GlobalData.characterDataDict = make_character_resource_dict()
 func _get_property_list():
 	var properties = []

@@ -23,6 +23,7 @@ func _ready():
 		Command.new("jump:", "jump to a flag in the conversation", "jump: <flag>", validate_command_chain),
 		Command.new("emotion:", "change current portrait to specified portrait","emotion: <name> <emotion>", 
 		validate_command_chain),
+		Command.new("format:", "format string, swapping out placeholders", r'format: <"a" "b" "c">', validate_command_chain),
 		Command.new("print:","","",func():print("success")),
 		]
 	conditionPrefixRegex.compile(r'^(if:|elif:|else:)')

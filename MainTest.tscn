@@ -32,6 +32,8 @@ settings = NodePath("DialogSystemSettings")
 script = ExtResource("2_ikj4e")
 chResources = Array[ExtResource("3_qhvnt")]([ExtResource("4_ycyqp")])
 readingSpeed = null
+shadowColor = null
+shadowOffset = null
 useOverrideNameColor = null
 
 [node name="Panel" type="Panel" parent="DialogSystemSettings"]

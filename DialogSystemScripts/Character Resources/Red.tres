@@ -9,8 +9,6 @@ script = ExtResource("1_148fb")
 color = Color(0.886651, 0.223014, 0.36322, 1)
 outlineColor = Color(0, 0, 0, 1)
 outlineSize = 3
-shadowColor = Color(0, 0, 0, 1)
-shadowOffset = Vector2(0, 0)
 
 [resource]
 resource_name = "Red"

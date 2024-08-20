@@ -2,7 +2,8 @@ extends Control
 
 #signal sigtest
 func _ready() -> void:
-	print("Ready")
+	var f = "Hi, {name} v{version}!".format(["Godette","3.0"])
+	print(f)
 	
 #func _unhandled_input(event: InputEvent) -> void:
 	#if event == mouse_entered:
