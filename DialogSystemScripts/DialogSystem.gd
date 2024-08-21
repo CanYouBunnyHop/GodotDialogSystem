@@ -7,8 +7,7 @@ var currentConversation : Array[String] = []
 signal signal_start_convo
 signal signal_play_next
 signal signal_jump(flag:String)
-#signal signal_jump(flag:String)
-#@export var characterNames : Dictionary = {} #for determining color names
+
 @export_file("*.txt") var file
 @export var buttonContainer : Node
 @export var dialogBox : RichTextLabel

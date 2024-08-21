@@ -1,4 +1,4 @@
-Jeff: [font_size=20]This[/font_size] is line one[b, color=teal, wave]
+(if: %b same "10"?)Jeff: [font_size=20]This[/font_size] is line one[b, color=teal, wave]
 Jeff: This is line two dddddddd dddddddd ddddddd dddddd ddddddd ddd dddd ddd
 Sam: This is line three
 Sam: This is line four

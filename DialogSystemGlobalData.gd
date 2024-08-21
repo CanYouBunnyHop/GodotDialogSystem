@@ -1,12 +1,14 @@
 class_name DialogSystemGlobalData extends Node
-var data : Dictionary = {"%a":false,"%b":10}
+var data : Dictionary = {"a":false,"b":10}
 var characterDataDict : Dictionary
 var currentDialogSystem : DialogSystem
 func _ready():
 	pass
 	#print("ass"+"\n"+"ass2")
-func get_data(key : String, type: Variant.Type):
-	if !data.has(key) or typeof(data[key]) != type: #will override and create new var if type dont match
+func get_data(key : String, type: Variant.Type = TYPE_INT):
+	#will override and create new var if type dont match
+	#if dont have key, or has key but type differs 
+	if !data.has(key) or typeof(data[key]) != type: 
 		match type:
 			TYPE_BOOL:
 				data[key] = false
@@ -16,28 +18,40 @@ func get_data(key : String, type: Variant.Type):
 				data[key] = ""
 	return data[key]
 func set_data(target : String, value, operator:String):
-	var _tar = get_data(target, typeof(value))
-	match operator:
-		"=","is","same":
-			data[target] = value
-		"is_not":
-			data[target] != value
-		"+=":
-			data[target] += value
-		"-=":
-			data[target] -= value
-		"*=":
-			data[target] *= value
-		"/=":
-			if data[target] / value != 0:
-				data[target] /= value 
-			else:
-				push_warning("WARNING: tried to divide by 0")
-		"prefix":
-			data[target] = value + data[target]
-		"suffix":
-			data[target] = data[target] + value 
-		"prefix_":
-			data[target] = value +" "+ data[target]
-		"suffix_":
-			data[target] + data[target] +" "+ value 
+	var type = typeof(value)
+	var _tar = get_data(target, type) #makes sure target exist
+	if type == TYPE_INT:
+		match operator:
+			"=":
+				data[target] = value
+			"+=":
+				data[target] += value
+			"-=":
+				data[target] -= value
+			"*=":
+				data[target] *= value
+			"/=":
+				if value != 0: #cannot divide by zero
+					data[target] /= value 
+				else:
+					push_warning("WARNING: tried to divide by 0")
+	elif type == TYPE_BOOL:
+		match operator:
+			"=":
+				data[target] = value
+			"!=":
+				data[target] != value
+	elif type == TYPE_STRING:
+		match operator:
+			"=":
+				data[target] = value
+			"+=":
+				data[target] += value
+			"prefix":
+				data[target] = value + data[target]
+			"suffix":
+				data[target] = data[target] + value 
+			"prefix_":
+				data[target] = value +" "+ data[target]
+			"_suffix":
+				data[target] + data[target] +" "+ value 

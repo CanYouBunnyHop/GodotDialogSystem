@@ -1,14 +1,7 @@
 extends Control
 
-#signal sigtest
+var reg = RegEx.new()
 func _ready() -> void:
-	var f = "Hi, {name} v{version}!".format(["Godette","3.0"])
-	print(f)
+	CmdListener.handle_input(r'if: %a == false then: %name = "ass" ; else: then: %name = "butt"')
+	pass
 	
-#func _unhandled_input(event: InputEvent) -> void:
-	#if event == mouse_entered:
-		#self.disabled = true
-	#sigtest.connect(func(): print_something("ass"))
-	#sigtest.emit()
-#func print_something(s : String = "Some"):
-	#print(s)
