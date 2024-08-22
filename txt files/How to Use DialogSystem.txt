@@ -32,6 +32,9 @@ only the first step is counted, and the "if:" command ID is not nessasary
 BBCode is supported, using rich text label.
 <Name> = can determine the character portraits, unique font color, displayed before the dialog
 <dialog> = dialog to be displayed
+format = you can use placeholder example,
+"{name}: My name is {name}, nice to meet you." if global data has {name} included, it will replace the name, 
+int and bool are also casted to string
 <[BBTag]> apply BBCode to the dialog, also allows parameters override, if multiple tags are inputted split them using ","
 "" default = if condition is false, the text and command boxB will be skipped over
 maybe will add instruction...
@@ -104,9 +107,6 @@ emotion command #todo
 changes portrait sprite to the correct via dictionary in a character resource
 can be used to display character portrait without a name in dialog, or override
 the current portrait
-
-format command
-{a}and{b}(<format:> <key> "string",)
 
 Command chain
 command chain is seperated by ";" in a condition container

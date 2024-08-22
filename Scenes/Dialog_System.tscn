@@ -1,18 +1,18 @@
 [gd_scene load_steps=10 format=3 uid="uid://b2wuwiadupfke"]
 
-[ext_resource type="Script" path="res://DialogSystemScripts/DialogSystem.gd" id="1_x0n5c"]
-[ext_resource type="Script" path="res://DialogSystemSettings.gd" id="2_ikj4e"]
-[ext_resource type="Script" path="res://DialogSystemScripts/Base Resources/CharacterBaseResource.gd" id="3_qhvnt"]
-[ext_resource type="Script" path="res://CustomBBTags/CustomBBTag_ghost.gd" id="3_udcrh"]
-[ext_resource type="Texture2D" uid="uid://c0fdqpws140qe" path="res://testPortrait.png" id="3_wrajl"]
-[ext_resource type="Script" path="res://CustomBBTags/CustomBBTag_matrix.gd" id="4_akrjr"]
-[ext_resource type="Resource" uid="uid://c5pqkgtxdl3sn" path="res://DialogSystemScripts/Character Resources/Red.tres" id="4_ycyqp"]
+[ext_resource type="Script" path="res://DialogSystemScripts/DialogSystem.gd" id="1_rtt8w"]
+[ext_resource type="Script" path="res://DialogSystemSettings.gd" id="2_w80hb"]
+[ext_resource type="Script" path="res://DialogSystemScripts/Base Resources/CharacterBaseResource.gd" id="3_rljsg"]
+[ext_resource type="Resource" uid="uid://c5pqkgtxdl3sn" path="res://DialogSystemScripts/Character Resources/Red.tres" id="4_fe2ak"]
+[ext_resource type="Texture2D" uid="uid://c0fdqpws140qe" path="res://testPortrait.png" id="5_s3fip"]
+[ext_resource type="Script" path="res://CustomBBTags/CustomBBTag_ghost.gd" id="6_aqjfh"]
+[ext_resource type="Script" path="res://CustomBBTags/CustomBBTag_matrix.gd" id="7_2yhb0"]
 
 [sub_resource type="RichTextEffect" id="RichTextEffect_pwlq5"]
-script = ExtResource("3_udcrh")
+script = ExtResource("6_aqjfh")
 
 [sub_resource type="RichTextEffect" id="RichTextEffect_dhnip"]
-script = ExtResource("4_akrjr")
+script = ExtResource("7_2yhb0")
 
 [node name="DialogSystem" type="Control" node_paths=PackedStringArray("buttonContainer", "dialogBox", "dialogPortrait", "settings")]
 layout_mode = 3
@@ -21,7 +21,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-script = ExtResource("1_x0n5c")
+script = ExtResource("1_rtt8w")
 file = "res://txt files/Conversation.txt"
 buttonContainer = NodePath("DialogSystemSettings/Button Container")
 dialogBox = NodePath("DialogSystemSettings/Panel/RichTextLabel")
@@ -29,9 +29,9 @@ dialogPortrait = NodePath("DialogSystemSettings/Panel/DialogPortrait")
 settings = NodePath("DialogSystemSettings")
 
 [node name="DialogSystemSettings" type="Node" parent="." node_paths=PackedStringArray("dialogBox")]
-script = ExtResource("2_ikj4e")
+script = ExtResource("2_w80hb")
 dialogBox = NodePath("Panel/RichTextLabel")
-chResources = Array[ExtResource("3_qhvnt")]([ExtResource("4_ycyqp")])
+chResources = Array[ExtResource("3_rljsg")]([ExtResource("4_fe2ak")])
 shadowOffset = Vector2(0, 0)
 useOverrideNameColor = null
 
@@ -45,7 +45,7 @@ mouse_filter = 1
 [node name="DialogPortrait" type="Sprite2D" parent="DialogSystemSettings/Panel"]
 position = Vector2(66, 56)
 scale = Vector2(3.09375, 2.79719)
-texture = ExtResource("3_wrajl")
+texture = ExtResource("5_s3fip")
 hframes = 7
 vframes = 4
 frame = 22

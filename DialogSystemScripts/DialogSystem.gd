@@ -39,8 +39,7 @@ func _ready():
 	signal_play_next.connect(play_next_dialog)
 	signal_jump.connect(play_next_dialog)
 
-#Have this in the root
-func _process(_delta: float) -> void:
+func _unhandled_input(_event: InputEvent) -> void:
 	if Input.is_action_just_pressed("Interact"):
 		play_next_dialog()
 
@@ -84,7 +83,7 @@ func play_next_dialog(_flagName : String = ""):
 	var boxB : String
 	var isChoice : bool = false
 	var boxAcondition : bool = false
-	while true:
+	while currentLine <= currentConversation.size():
 		currentLine += 1
 		snapshot = capture_line(get_line())
 		isChoice = snapshot["isChoice"]
@@ -92,14 +91,13 @@ func play_next_dialog(_flagName : String = ""):
 		boxB = snapshot["boxB"]
 		var full : String = snapshot["full"]
 		boxAcondition = read_boxA_condition(boxA)
-		#if not a choice, and boxA is true, handle boxB input
-		if not isChoice and boxAcondition: CmdListener.handle_input(boxB)
-		#if line is empty, continue to next line
-		if full.is_empty(): continue
-		if isChoice or boxAcondition == true:
-			break
+		#if not a choice, and boxA is true, handle boxB input if line is empty, continue to next line
+		if isChoice: break #break if it's a choice, 
+		if not boxAcondition: continue #if box a is not true, continue
+		CmdListener.handle_input(boxB)#if not a choice, boxa is true and full is empty
+		if not full.is_empty(): break #if the "not choice" is not an empty dialog line, break, display line
 	if boxAcondition and not isChoice:
-		display_dialogLine(snapshot["dialog"], snapshot["name"], snapshot["bbtag"])
+		display_dialogline(snapshot["dialog"], snapshot["name"], snapshot["bbtag"])
 		#display_portrait(currentCaptures["name"], currentCaptures["tone"])
 	#display buttons
 	while capture_line(get_line())["isChoice"]:#lineCaptureRegex.search(get_line()).get_string("Button").is_empty(): # while currentline is a choice, loops
@@ -180,7 +178,7 @@ func create_choice_button(_line):
 	choiceButt.disabled = isDisabled
 	choiceButt.pressed.connect(buttonCommands)
 	
-func display_dialogLine(dialogLine: String, _name:String = "", _bbtag:String = ""):
+func display_dialogline(dialogLine: String, _name:String = "", _bbtag:String = ""):
 	var gChData = GlobalData.characterDataDict
 	var curCharacterData : CharacterBaseResource
 	var bbname = _name
@@ -199,7 +197,8 @@ func display_dialogLine(dialogLine: String, _name:String = "", _bbtag:String = "
 			var param = bbt.get_string("Param")
 			dialogLine = apply_bbcode(dialogLine, tag, param)
 	dialogBox.visible_characters = 0;
-	dialogBox.text = bbname + dialogLine
+	var fullLine = bbname + dialogLine
+	dialogBox.text = fullLine.format(GlobalData.data)
 	
 	var length = dialogBox.get_total_character_count()
 	if readTween: readTween.kill()
@@ -209,6 +208,10 @@ func display_dialogLine(dialogLine: String, _name:String = "", _bbtag:String = "
 	readTween.tween_property(dialogBox,"visible_characters", length, 1).from(_name.length() + 1)
 	print(str(currentLine) + ":" + get_line())
 	
+#func format_dialogline(formatArray : Array[String]):
+	#var dialogline = dialogBox.get_parsed_text()
+	#var newLine = dialogline.format(formatArray)
+	#dialogBox.text = newLine
 #func display_portrait(_name:String = "", _tone:String = ""):
 	#var gChData = Global_Data.characterDataDict
 	#var chData : CharacterBaseResource

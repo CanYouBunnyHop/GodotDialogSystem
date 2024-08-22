@@ -1,5 +1,5 @@
 class_name DialogSystemGlobalData extends Node
-var data : Dictionary = {"a":false,"b":10}
+var data : Dictionary = {"a":false,"b":10,"name":"Nick"}
 var characterDataDict : Dictionary
 var currentDialogSystem : DialogSystem
 func _ready():

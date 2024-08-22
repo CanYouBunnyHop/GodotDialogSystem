@@ -1,17 +1,12 @@
 class_name CommandListener extends Node
-var globaldata : 
+var gdata : 
 	get: return GlobalData.data
-var curSystem:
-	get: return	GlobalData.currentDialogSystem
-#static var currentDialogSystem : DialogSystem
 var conditionWithTypeRegex = RegEx.new()
-#static var conditionRegex = RegEx.new()
 var conditionPrefixRegex = RegEx.new()
 var statementWithTypeRegex = RegEx.new()
-#var statementRegex = RegEx.new()
 var jumpRegex = RegEx.new()
-var formatRegex = RegEx.new()
-
+#var formatRegex = RegEx.new()
+#var formatArrayRegex = RegEx.new()
 enum {
 	OBJ_EXIST = 1,
 	OBJ_DAT = 2,
@@ -19,6 +14,8 @@ enum {
 	OBJ_BOOL = 8,
 	OBJ_STR = 16
 }
+var	debugConsole : LineEdit
+var debugConsoleLbl : RichTextLabel
 var commandList : Array[Command]
 func _ready():
 	commandList = [
@@ -30,21 +27,58 @@ func _ready():
 		Command.new("jump:", "jump to a flag in the conversation", "jump: <flag>", validate_command_chain),
 		Command.new("emotion:", "change current portrait to specified portrait","emotion: <name> <emotion>", 
 		validate_command_chain),
-		Command.new("format:", "format string, swapping out placeholders", r'format: <"a" "b" "c">', validate_command_chain),
-		Command.new("print:","","",func(_input : String):print("_input")),
+		Command.new("print:","","",func(_in : String):print("success")),
 		]
 	conditionPrefixRegex.compile(r'^(if:|elif:|else:)')
 	conditionWithTypeRegex.compile(r'(?<Condition>(?:%(?<Subject>\w+))\s+(?<Com>==|!=|<|<=|>|>=)\s+(?:(?:%(?<DatObj>\w+))|(?<IntObj>\d+)|(?<BoolObj>true|false)|(?:"(?<StrObj>.*?)")))(?:\s+(?<Keyword>(?<hasKW>and|or)|))(?(hasKW)(?<ConditionB>\s+(?&Condition)))')
-	#statementRegex.compile(r'(?:then:\s*(?<Target>[a-zA-z]+)\s+(?:(?<IntOp>=|\+=|-=|\*=|\/=)\s*(?<IntVal>\d+|[a-zA-z]+)|(?<BoolOp>is|is_not)\s+(?<BoolVal>true|false|[a-zA-z]+)))')
-	#conditionRegex.compile(r'(?<Condition>(?<Subject>(?<=%)\w+)\s+(?:(?<IntCom>==|!=|<|<=|>|>=)\s+(?<IntObj>\d+|%\w+)|(?<BoolCom>is|is_not)\s+(?<BoolObj>true|false|%\w+)|(?<StrCom>same|diff)\s+(?<StrObj>".*"|%\w+)))(?:\s+(?<Keyword>and|or)|)(?(Keyword)(?<ConditionB>\s+(?&Condition)))\s*\?(?!.*\?)')
 	statementWithTypeRegex.compile(r'then:\s*(?:%(?<Target>\w+))\s+(?<Op>=|!=|\+=|-=|\*=|\/=|prefix|suffix|prefix_|_suffix)\s*(?:%(?<DatVal>\w+)|(?<IntVal>\d+)|(?<BoolVal>true|false)|(?:"(?<StrVal>.*?)"))')
-	#statementRegex.compile(r'(?:then:\s*(?<Target>%\w+)\s+(?:(?<IntOp>=|\+=|-=|\*=|\/=)\s*(?<IntVal>\d+|%\w+)|(?<BoolOp>is|is_not)\s+(?<BoolVal>true|false|%\w+)|(?<StrOp>same|prefix|suffix|prefix_|suffix_)\s+(?<StrVal>".*?"|%\w+)))')
 	jumpRegex.compile(r'jump:\s*(?<Flag>\w+\s*?)')
-	formatRegex.compile(r'"(?<Str>.*?)"')
+	#formatRegex.compile(r'format:\s*\[(?<Array>.*)\]')
+	#formatArrayRegex.compile(r'"(?<Str>.*?)"|%(?<Dat>\w+)')
+	var createDebugConsole = func():
+		debugConsole = LineEdit.new()
+		debugConsole.top_level = true
+		debugConsole.set_anchor(SIDE_RIGHT, 1)
+		debugConsole.offset_left = 15
+		debugConsole.offset_top = 15
+		debugConsole.offset_right = -15
+		#label stuff
+		debugConsoleLbl = RichTextLabel.new()
+		debugConsoleLbl.set_anchor(SIDE_RIGHT, 1)
+		debugConsoleLbl.offset_left = 15
+		debugConsoleLbl.offset_top = 32
+		debugConsoleLbl.offset_right = -15
+		debugConsoleLbl.offset_bottom = 200
+		debugConsoleLbl.bbcode_enabled = true
+		add_child(debugConsole)
+		debugConsole.add_child(debugConsoleLbl)
+		debugConsole.visible = false
+	createDebugConsole.call()
+	debugConsole.text_submitted.connect(enter_text_input)
 	#Command_Listener.handle_input("if: a is true ? then: b is false; else: then: b is true")
 	#handle_input("print:")
 #func printS(input : String):
 	#print("success")
+func _input(event: InputEvent) -> void:
+	if event.is_action_released("OpenDebugConsole"):
+		debugConsole.visible = not debugConsole.visible
+		debugConsole.grab_focus()
+
+func enter_text_input(input:String):
+	if input.begins_with("/"):
+			handle_input(input.trim_prefix("/"))
+	debug_log(input)
+	debugConsole.clear()
+
+func debug_error(input:String):
+	var err = "[color=red]"+"ERROR: "+input+"[/color]"
+	debugConsoleLbl.append_text(err)
+	debugConsoleLbl.newline()
+	
+func debug_log(input : String):
+	debugConsoleLbl.add_text(input)
+	debugConsoleLbl.newline()
+		
 func handle_input(_inputFull : String):
 	var commandInputs = _inputFull.split(",", false)
 	for input in commandInputs:
@@ -55,15 +89,18 @@ func handle_input(_inputFull : String):
 				break
 			elif i == (commandList.size()-1):
 				push_error("Invalid Command ID")
+				
 func read_condition(step:String)-> bool:
 	var subConditionA = conditionWithTypeRegex.search(step)#conditionRegex.search(step)
 	if subConditionA == null:
-		push_error("INVALID CONDITION: "+step) 
+		push_error("INVALID CONDITION: "+step)
+		debug_error("INVALID CONDITION: "+step)
 		return false
 	var finalResults : Array = []
 	var subConditionResult = func(condition : RegExMatch) -> bool:
 		if condition == null:
 			push_error("CONDITION NOT FOUND, CHECK FOR SYNTAX ERROR")
+			debug_error("CONDITION NOT FOUND, CHECK FOR SYNTAX ERROR")
 			return false
 		var comparator : String = condition.get_string("Com")
 		var subjStr = condition.get_string("Subject")
@@ -108,6 +145,7 @@ func read_condition(step:String)-> bool:
 		#return if types dont match
 		if typeof(object) != type:
 			push_error("OBJECT TYPE DOES NOT MATCH SUBJECT TYPE")
+			debug_error("OBJECT TYPE DOES NOT MATCH SUBJECT TYPE")
 			return false
 		if type == TYPE_INT:
 			match comparator:
@@ -124,8 +162,8 @@ func read_condition(step:String)-> bool:
 				">=":
 					return subject >= object
 				_:
-					push_error("ERROR: Invalid command comparator: 
-						\"{c}\"".format({"c":comparator}))
+					push_error("ERROR: Invalid command comparator")
+					debug_error("ERROR: Invalid command comparator")
 					return false
 		else: #not an interger
 			match comparator:
@@ -134,76 +172,14 @@ func read_condition(step:String)-> bool:
 				"!=": #int, bool, string
 					return subject != object
 				_:
-					push_error("ERROR: Invalid command comparator: 
-						\"{c}\"".format({"c":comparator}))
+					push_error("ERROR: Invalid command comparator")
+					debug_error("ERROR: Invalid command comparator")
 					return false
-		#var obj
-		#match key:
-			#"IntObj":
-				#obj = int(objStr)
-			#"BoolObj":
-				#if objStr == "true": obj = true
-				#elif objStr == "false": obj = false
-			#"StrObj":
-				#obj = objStr
-			#"DatObj": #if object is a search key in globaldata
-				#if GlobalData.data.has(objStr): #if object exist in Global data
-					#objExist = true
-					#obj = GlobalData.data[objStr] # get existing data
-				#else: #if object does not exist 
-					#if GlobalData.data.has(subjStr):
-						#var subtype = typeof(GlobalData.data[subjStr])
-						#obj = GlobalData.get_data(objStr, subtype)
-					#else:
-						#push_error("CONDITION OBJECT AND SUBJECT NOT FOUND, CONDITION WILL RETURN FALSE")
-						#return false
-					#type = typeof(GlobalData.data[objStr])
-					
-		#if !condition.get_string("IntCom").is_empty():
-			#comparator = condition.get_string("IntCom")
-			#object = condition.get_string("IntObj")
-			#type = TYPE_INT
-		#elif !condition.get_string("BoolCom").is_empty():
-			#comparator = condition.get_string("BoolCom")
-			#object = condition.get_string("BoolObj")
-			#type = TYPE_BOOL
-		#elif !condition.get_string("StrCom").is_empty():
-			#comparator = condition.get_string("StrCom")
-			#object = condition.get_string("StrObj").trim_prefix("\"").trim_suffix("\"")
-			#type = TYPE_STRING
-			
-		#var type = typeof(obj)
-		#so when creating new data entry, type will match
-		#var sub = GlobalData.get_data(subjStr) 
-		#var obj
-		#if object.begins_with("%"):
-			#obj = GlobalData.get_data(object, type)
-		#else:
-			#match type:
-				#TYPE_INT:
-					#if int(object) != 0 or object == "0":
-						#obj = int(object)
-					#else:
-						#push_warning("Warning: Invalid object: 
-							#\"{object}\" of type: \"{type}\"".format({"object":object, "type":type}))
-						#obj = 0
-				#TYPE_BOOL:
-					#match object:
-						#"true":
-							#obj = true
-						#"false":
-							#obj = false
-						#_:
-							#push_warning("Warning: Invalid object: 
-								#\"{object}\" of type: \"{type}\"".format({"object":object, "type":type}))
-							#obj = false
-				#TYPE_STRING:
-					#obj = object.trim_prefix("\"").trim_suffix("\"")
-	finalResults.append(subConditionResult.call(subConditionA)) #return result if keyword dont exist	
-	var keyWord = subConditionA.get_string("Keyword") #if !subConditionA.get_string("Keyword").is_empty() else ""
+	finalResults.append(subConditionResult.call(subConditionA)) #return result if keyword dont exist
+	var keyWord = subConditionA.get_string("Keyword")
 	match keyWord:
 		"and":
-			var subConditionB = conditionWithTypeRegex.search(subConditionA.get_string("ConditionB")+"?")
+			var subConditionB = conditionWithTypeRegex.search(subConditionA.get_string("ConditionB"))
 			finalResults.append(subConditionResult.call(subConditionB))
 			if finalResults[0] == true and finalResults[1] == true:
 				var commandChain = step.trim_prefix(subConditionA.get_string()).strip_edges()
@@ -242,16 +218,44 @@ func read_condition_container(_arg:String):
 			break
 		else:
 			push_error("Invalid Condition Container")
+			debug_error("Invalid Condition Container")
 func validate_command_chain(input:String):
 	var thenCommands : Array[RegExMatch] = statementWithTypeRegex.search_all(input)
-	var jumpCommand : RegExMatch = jumpRegex.search(input) # split out then: and jump: command, command chain should only be called when using if command
-	#var jump command
+	var jumpCommand : RegExMatch = jumpRegex.search(input)
+	#var formatCommand : RegExMatch = formatRegex.search(input)
+	#if formatCommand != null:
+		#var s = formatCommand.get_string("Array")
+		#var forMatchArr : Array[RegExMatch] = formatArrayRegex.search_all(s)
+		#var formatArr : Array[String] = []
+		#for rm in forMatchArr:
+			#if rm.names.has("Str"):
+				#formatArr.append(rm.get_string("Str"))
+			#elif rm.names.has("Dat"):
+				#var key = rm.get_string("Dat")
+				#if GlobalData.data.has(key):
+					#var dat = GlobalData.data[key]
+					#match typeof(dat):
+						#TYPE_STRING:
+							#formatArr.append(dat)
+						#TYPE_INT:
+							#formatArr.append(str(dat))
+						#TYPE_BOOL:
+							#if dat: formatArr.append(key+": true")
+							#else: formatArr.append(key+": false")
+						#_:
+							#push_error("ERROR: "+key+"DATA CANNOT BE CASTED TO STRING")
+							#debug_log(key+"DATA CANNOT BE CASTED TO STRING")
+							#formatArr.append(key)
+				#else:
+					#push_error("ERROR: "+key+"DATA CANNOT BE FOUND")
+					#debug_log(key+"DATA CANNOT BE FOUND")
+					#formatArr.append(key)
+		#GlobalData.currentDialogSystem.format_dialogline(formatArr)
+	#split out then: and jump: command
 	for tcmd in thenCommands:
 		var target = tcmd.get_string("Target")#
 		var operator = tcmd.get_string("Op")#
 		var valStr#
-		#var type#
-		#var tarDatExist : bool = true if GlobalData.data.has(target) else false	
 		var _valType : int = 0#
 		var val#
 		var searchValType : Array = ["DatVal", "IntVal", "BoolVal", "StrVal"]#
@@ -273,68 +277,8 @@ func validate_command_chain(input:String):
 					"StrVal":
 						_valType |= OBJ_STR | OBJ_EXIST
 						val = valStr
-		#var tar
-		#if !tarDatExist and (valType & OBJ_EXIST) != OBJ_EXIST:
-			#push_error("INVALID THEN STATEMENT")
-			#return
-		#if tarDatExist: #target exist
-			#tar = GlobalData.data[target]
-			#if valType == OBJ_DAT: #if valType = dat and does not exist
-				#val = GlobalData.get_data(valStr, typeof(tar))
-		#else :#target data don't exist
-			#match valType:
-				#OBJ_INT | OBJ_EXIST:
-					#tar = GlobalData.get_data(target, TYPE_INT)
-				#OBJ_BOOL | OBJ_EXIST:
-					#tar = GlobalData.get_data(target, TYPE_BOOL)
-				#OBJ_STR | OBJ_EXIST:
-					#tar = GlobalData.get_data(target, TYPE_STRING)
 		GlobalData.set_data(target, val, operator)		
-			
-			#if valType & OBJ_EXIST != 1:
-				
-		#if !tcmd.get_string("IntOp").is_empty():
-		
-			#operator = tcmd.get_string("IntOp")
-			#value = tcmd.get_string("IntVal")
-			#type = TYPE_INT
-		#elif !tcmd.get_string("BoolOp").is_empty():
-			#operator = tcmd.get_string("BoolOp")
-			#value = tcmd.get_string("BoolVal")
-			#type = TYPE_BOOL
-		#elif !tcmd.get_string("StrOp").is_empty():
-			#operator = tcmd.get_string("StrOp")
-			#value = tcmd.get_string("StrVal")
-			#type = TYPE_STRING
-		#do_statement(subject, operator, value, type, target)
 	if jumpCommand == null: return
-	var x = jumpCommand.get_string("Flag")
-	print(x)
 	jump_statement(jumpCommand.get_string("Flag"))
-#func do_statement(target:String, operator:String, value, type:Variant.Type, _new_target:String = target):	
-	#var val
-	#if value.begins_with("%"): #if it is getting dictionary
-		#val = GlobalData.get_data(value, type)
-		#GlobalData.set_data(target, val, operator)
-		#return
-	#match type:
-		#TYPE_INT:
-			#if int(value) != 0 or value == "0":
-				#val = int(value)
-			#else:
-				#push_warning("Warning: Invalid value: \"{value}\" of type: \"{type}\"".format({"value":value, "type":type}))
-				#val = 0
-		#TYPE_BOOL:
-			#match value:
-				#"true":
-					#val = true
-				#"false":
-					#val = false
-				#_:
-					#push_warning("Warning: Invalid value: \"{value}\" of type: \"{type}\"".format({"value":value, "type":type}))
-					#val = false
-		#TYPE_STRING:
-			#val = value.trim_prefix("\"").trim_suffix("\"")
-	#GlobalData.set_data(target, val, operator)
 func jump_statement(_flag : String = ""):
 	GlobalData.currentDialogSystem.signal_play_next.emit(_flag)
