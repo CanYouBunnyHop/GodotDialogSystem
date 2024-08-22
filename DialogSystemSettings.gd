@@ -16,7 +16,7 @@ class_name DialogSystemSettings extends Node
 @export_group("Font Settings")
 @export var defaultFontSettings : FontSettingsResource = preload("res://DialogSystemScripts/Base Resources/defaultFontSetting.tres")
 @export var shadowColor : Color = Color.BLACK
-@export var shadowOffset : Vector2 = Vector2(0, 0)
+@export var shadowOffset : Vector2i = Vector2i(0, 0)
 
 #@export var default
 @export_group("Override Dialog Settings")

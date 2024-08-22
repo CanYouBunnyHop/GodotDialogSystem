@@ -40,7 +40,7 @@ func _ready():
 	signal_jump.connect(play_next_dialog)
 
 #Have this in the root
-func _process(delta: float) -> void:
+func _process(_delta: float) -> void:
 	if Input.is_action_just_pressed("Interact"):
 		play_next_dialog()
 
@@ -80,15 +80,25 @@ func play_next_dialog(_flagName : String = ""):
 		print("end conversation")
 		return
 	var snapshot : Dictionary
+	var boxA : String
+	var boxB : String
+	var isChoice : bool = false
+	var boxAcondition : bool = false
 	while true:
 		currentLine += 1
 		snapshot = capture_line(get_line())
-		var isChoice = snapshot["isChoice"]
-		var boxA = snapshot["boxA"]
-		if isChoice or read_boxA_condition(boxA) == true:
+		isChoice = snapshot["isChoice"]
+		boxA = snapshot["boxA"]
+		boxB = snapshot["boxB"]
+		var full : String = snapshot["full"]
+		boxAcondition = read_boxA_condition(boxA)
+		#if not a choice, and boxA is true, handle boxB input
+		if not isChoice and boxAcondition: CmdListener.handle_input(boxB)
+		#if line is empty, continue to next line
+		if full.is_empty(): continue
+		if isChoice or boxAcondition == true:
 			break
-	snapshot = capture_line(get_line())
-	if read_boxA_condition(snapshot["boxA"]) and not snapshot["isChoice"]:
+	if boxAcondition and not isChoice:
 		display_dialogLine(snapshot["dialog"], snapshot["name"], snapshot["bbtag"])
 		#display_portrait(currentCaptures["name"], currentCaptures["tone"])
 	#display buttons

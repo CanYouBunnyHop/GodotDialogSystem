@@ -1,8 +1,7 @@
 CharacterSpriteAtlas
 make sure each character is on the same row
 
-
-commandListener
+CommandListener
 singleton, takes in the current DialogSystem to read
 
 GlobalData
@@ -55,10 +54,7 @@ Sub-condiiton = <%subject> <comparator> <object>
 if: = declare start of the command
 <%subject> = must use "%"prefix to tell complier to get global dictionary, 
 	if subject doesn't exist, create one
-<comparator> = 
-	for integer use (==|!=|<|<=|>|>=) 
-	for bool use (is|is_not)
-	for string use (same|diff)
+<comparator> = (==|!=|<|<=|>|>=) "==" and "!=" is universal, the rest are for int
 <object> = used for comparison
 <and|or> = optional, includes a 2nd Sub-condition, "and" checks for both sub-conditions are true, "or" checks for either sub-conditions is true
 <command> = another command that can be run if the condition is true
@@ -80,15 +76,19 @@ only the first "if:" will be called, as the loop has already exited.
 then command
 <then:> <target> <operator> <value>
 <target> = get global dictionary, if target doesn't exist, create one
-<operator> = for integer use (=|+=|-=|*=|/=) for bool use (is|is_not)
+<operator> = (=|!=|+=|-=|*=|/=|prefix|suffix|prefix_|_suffix) "=" is universal, 
+			"!=" is for bool, "+=" is for int and string, 
+			rest of the assingment operatprs are for int
+			"prefix" and "suffix" are for string, they add either prefix or suffix
+			"prefix_" and "_suffix" are for string they add either prefix or suffix with" "in between
 <value> = update the target to that of the value
 ie:
-(then: monsterIsAlive is false)
+(then: %monsterIsAlive is false)
 ie:
-(then: monsterHP -= 5)
+(then: %monsterHP -= 5)
 ie:
-(then: toggle is_not toggle)
-"is_not" is only implemented for toggle usage without the need for condition container
+(then: %toggle != %toggle)
+"!=" is only implemented for toggle usage without the need for condition container
 quirk
 for numbers, only int are currently supported, when dividing, decimal places are truncated
 then dividing by 0

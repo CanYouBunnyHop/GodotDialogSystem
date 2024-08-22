@@ -16,6 +16,7 @@ func get_data(key : String, type: Variant.Type = TYPE_INT):
 				data[key] = 0
 			TYPE_STRING:
 				data[key] = ""
+		print("This key, "+key+", has either been created or overriden")
 	return data[key]
 func set_data(target : String, value, operator:String):
 	var type = typeof(value)
@@ -54,4 +55,4 @@ func set_data(target : String, value, operator:String):
 			"prefix_":
 				data[target] = value +" "+ data[target]
 			"_suffix":
-				data[target] + data[target] +" "+ value 
+				data[target] = data[target] +" "+ value 

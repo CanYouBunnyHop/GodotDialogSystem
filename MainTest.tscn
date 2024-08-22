@@ -28,12 +28,11 @@ dialogBox = NodePath("DialogSystemSettings/Panel/RichTextLabel")
 dialogPortrait = NodePath("DialogSystemSettings/Panel/DialogPortrait")
 settings = NodePath("DialogSystemSettings")
 
-[node name="DialogSystemSettings" type="Node" parent="."]
+[node name="DialogSystemSettings" type="Node" parent="." node_paths=PackedStringArray("dialogBox")]
 script = ExtResource("2_ikj4e")
+dialogBox = NodePath("Panel/RichTextLabel")
 chResources = Array[ExtResource("3_qhvnt")]([ExtResource("4_ycyqp")])
-readingSpeed = null
-shadowColor = null
-shadowOffset = null
+shadowOffset = Vector2(0, 0)
 useOverrideNameColor = null
 
 [node name="Panel" type="Panel" parent="DialogSystemSettings"]
@@ -58,6 +57,12 @@ offset_top = 22.0
 offset_right = 1050.0
 offset_bottom = 474.0
 mouse_filter = 1
+theme_override_colors/default_color = Color(1, 1, 1, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 1
+theme_override_constants/shadow_offset_y = 0
+theme_override_constants/shadow_offset_x = 0
 bbcode_enabled = true
 text = "tessssssssssssssssssssssssssssssss"
 scroll_active = false

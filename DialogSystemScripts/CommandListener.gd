@@ -4,7 +4,7 @@ var globaldata :
 var curSystem:
 	get: return	GlobalData.currentDialogSystem
 #static var currentDialogSystem : DialogSystem
-static var conditionWithTypeRegex = RegEx.new()
+var conditionWithTypeRegex = RegEx.new()
 #static var conditionRegex = RegEx.new()
 var conditionPrefixRegex = RegEx.new()
 var statementWithTypeRegex = RegEx.new()
@@ -13,13 +13,13 @@ var jumpRegex = RegEx.new()
 var formatRegex = RegEx.new()
 
 enum {
-	OBJ_EXIST = 1, #0001
+	OBJ_EXIST = 1,
 	OBJ_DAT = 2,
 	OBJ_INT = 4,
 	OBJ_BOOL = 8,
 	OBJ_STR = 16
 }
-static var commandList : Array[Command]
+var commandList : Array[Command]
 func _ready():
 	commandList = [
 		Command.new("if:", "Checks Condition, if true, then do action",
@@ -45,7 +45,7 @@ func _ready():
 	#handle_input("print:")
 #func printS(input : String):
 	#print("success")
-static func handle_input(_inputFull : String):
+func handle_input(_inputFull : String):
 	var commandInputs = _inputFull.split(",", false)
 	for input in commandInputs:
 		for i in range(0, commandList.size()):
@@ -55,7 +55,7 @@ static func handle_input(_inputFull : String):
 				break
 			elif i == (commandList.size()-1):
 				push_error("Invalid Command ID")
-static func read_condition(step:String)-> bool:
+func read_condition(step:String)-> bool:
 	var subConditionA = conditionWithTypeRegex.search(step)#conditionRegex.search(step)
 	if subConditionA == null:
 		push_error("INVALID CONDITION: "+step) 
@@ -103,6 +103,7 @@ static func read_condition(step:String)-> bool:
 				object = GlobalData.get_data(objStr, typeof(subject))
 		else: #subject data dont exist
 			subject = GlobalData.get_data(subjStr, typeof(object))
+			
 		var type = 	typeof(subject)
 		#return if types dont match
 		if typeof(object) != type:
@@ -221,7 +222,6 @@ static func read_condition(step:String)-> bool:
 				return false
 		_:
 			return finalResults[0]
-	return false
 func read_condition_container(_arg:String):
 	var allSteps = _arg.split(";",false)
 	for step in allSteps:
@@ -247,31 +247,31 @@ func validate_command_chain(input:String):
 	var jumpCommand : RegExMatch = jumpRegex.search(input) # split out then: and jump: command, command chain should only be called when using if command
 	#var jump command
 	for tcmd in thenCommands:
-		var target = tcmd.get_string("Target")
-		var operator = tcmd.get_string("Op")
-		var valStr
-		var type
+		var target = tcmd.get_string("Target")#
+		var operator = tcmd.get_string("Op")#
+		var valStr#
+		#var type#
 		#var tarDatExist : bool = true if GlobalData.data.has(target) else false	
-		var valType : int = 0
-		var val
-		var searchValType : Array = ["DatVal", "IntVal", "BoolVal", "StrVal"]
+		var _valType : int = 0#
+		var val#
+		var searchValType : Array = ["DatVal", "IntVal", "BoolVal", "StrVal"]#
 		for k in searchValType:
 			if tcmd.names.has(k):
 				valStr = tcmd.get_string(k)
 				match k:
 					"DatVal":
-						valType |= OBJ_DAT
+						_valType |= OBJ_DAT
 						if GlobalData.data.has(valStr):
-							valType |= OBJ_EXIST
+							_valType |= OBJ_EXIST
 					"IntVal":
-						valType |= OBJ_INT | OBJ_EXIST
+						_valType |= OBJ_INT | OBJ_EXIST
 						val = int(valStr)
 					"BoolVal":
-						valType |= OBJ_BOOL | OBJ_EXIST
+						_valType |= OBJ_BOOL | OBJ_EXIST
 						if valStr == "true": val = true
 						if valStr == "false": val = false
 					"StrVal":
-						valType |= OBJ_STR | OBJ_EXIST
+						_valType |= OBJ_STR | OBJ_EXIST
 						val = valStr
 		#var tar
 		#if !tarDatExist and (valType & OBJ_EXIST) != OBJ_EXIST:
@@ -311,30 +311,30 @@ func validate_command_chain(input:String):
 	var x = jumpCommand.get_string("Flag")
 	print(x)
 	jump_statement(jumpCommand.get_string("Flag"))
-func do_statement(target:String, operator:String, value, type:Variant.Type, _new_target:String = target):	
-	var val
-	if value.begins_with("%"): #if it is getting dictionary
-		val = GlobalData.get_data(value, type)
-		GlobalData.set_data(target, val, operator)
-		return
-	match type:
-		TYPE_INT:
-			if int(value) != 0 or value == "0":
-				val = int(value)
-			else:
-				push_warning("Warning: Invalid value: \"{value}\" of type: \"{type}\"".format({"value":value, "type":type}))
-				val = 0
-		TYPE_BOOL:
-			match value:
-				"true":
-					val = true
-				"false":
-					val = false
-				_:
-					push_warning("Warning: Invalid value: \"{value}\" of type: \"{type}\"".format({"value":value, "type":type}))
-					val = false
-		TYPE_STRING:
-			val = value.trim_prefix("\"").trim_suffix("\"")
-	GlobalData.set_data(target, val, operator)
+#func do_statement(target:String, operator:String, value, type:Variant.Type, _new_target:String = target):	
+	#var val
+	#if value.begins_with("%"): #if it is getting dictionary
+		#val = GlobalData.get_data(value, type)
+		#GlobalData.set_data(target, val, operator)
+		#return
+	#match type:
+		#TYPE_INT:
+			#if int(value) != 0 or value == "0":
+				#val = int(value)
+			#else:
+				#push_warning("Warning: Invalid value: \"{value}\" of type: \"{type}\"".format({"value":value, "type":type}))
+				#val = 0
+		#TYPE_BOOL:
+			#match value:
+				#"true":
+					#val = true
+				#"false":
+					#val = false
+				#_:
+					#push_warning("Warning: Invalid value: \"{value}\" of type: \"{type}\"".format({"value":value, "type":type}))
+					#val = false
+		#TYPE_STRING:
+			#val = value.trim_prefix("\"").trim_suffix("\"")
+	#GlobalData.set_data(target, val, operator)
 func jump_statement(_flag : String = ""):
 	GlobalData.currentDialogSystem.signal_play_next.emit(_flag)
