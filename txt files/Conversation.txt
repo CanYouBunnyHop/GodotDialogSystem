@@ -1,10 +1,11 @@
 
 {name}: My name is {name}
-Jeff: This is {0} {1} {2} (format:["a" "very big" "deal"])
+Jeff: This is line one
 Sam: This is line three
 Sam: This is line four
 Red: Testing
 
-()(then: %b = true)
+#()(then: %b = true)
 ()(if: %b <= 0 then: %c = 1 ; elif: %b <= 5 then: %c = 2 ; else: then: %c = 3)
-(if: %b == "10"?)Jeff: [font_size=20]This[/font_size] is line one[b, color=teal, wave]
+(if: %b == 10)Jeff:[font_size=20]This[/font_size] is {c}[b, color=teal, wave]
+stuff

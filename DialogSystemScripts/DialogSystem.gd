@@ -23,7 +23,7 @@ var bbtagRegex = RegEx.new()
 var lockScene : bool = false
 var readTween : Tween
 func _ready():
-	commandCaptureRegex.compile(r'^(?:(?<Button>>\s*)|)(?:(?:\((?<BoxA>[^\(\)]*)\))|)(?<Line>.*?)\s*(\((?!.*\()(?<BoxB>[^\(\)]*)\)|)$')
+	commandCaptureRegex.compile(r'^(?<Button>>\s*)?(?:\((?<BoxA>[^\(\)]*)\))?(?<Line>.*?)\s*(?:\((?!.*\()(?<BoxB>[^\(\)]*)\))?$')
 	dialogCaptureRegex.compile(r'(?:^(?:(?<Name>.*):|)(?:(?<Dialog>.*?)))(\[(?!.*\[)(?<BBTag>.*)\]|)$')
 	buttonInstructRegex.compile(r'(?<Instruction>\bdisable:|\bhide:)')
 	flagRegex.compile(r'^--(?<Flag>\s*\w+\s*)--')
@@ -121,6 +121,9 @@ func capture_line(_line:String = get_line())-> Dictionary:
 	var cmdMatch = commandCaptureRegex.search(_line)
 	var line = regEx_return.call(cmdMatch,"Line")#cmd.get_string("Line")
 	var	dialogLine = dialogCaptureRegex.search(line)
+	
+	const IS_CHOICE = "isChoice"
+	const BOX_A = "boxA"
 	
 	var isChoice = !cmdMatch.get_string("Button").is_empty()
 	var boxA = cmdMatch.get_string("BoxA")

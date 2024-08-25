@@ -32,7 +32,6 @@ settings = NodePath("DialogSystemSettings")
 script = ExtResource("2_w80hb")
 dialogBox = NodePath("Panel/RichTextLabel")
 chResources = Array[ExtResource("3_rljsg")]([ExtResource("4_fe2ak")])
-shadowOffset = Vector2(0, 0)
 useOverrideNameColor = null
 
 [node name="Panel" type="Panel" parent="DialogSystemSettings"]

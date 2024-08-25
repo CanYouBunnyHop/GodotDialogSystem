@@ -5,15 +5,20 @@ var conditionWithTypeRegex = RegEx.new()
 var conditionPrefixRegex = RegEx.new()
 var statementWithTypeRegex = RegEx.new()
 var jumpRegex = RegEx.new()
-#var formatRegex = RegEx.new()
-#var formatArrayRegex = RegEx.new()
-enum {
-	OBJ_EXIST = 1,
-	OBJ_DAT = 2,
-	OBJ_INT = 4,
-	OBJ_BOOL = 8,
-	OBJ_STR = 16
+
+enum OBJ_TYPE{
+	NULL = 0,
+	EXIST = 1,
+	DAT = 2,
+	INT = 4,
+	BOOL = 8,
+	STR = 16
 }
+
+#"DatObj","IntObj","BoolObj","StrObj"
+#Subject, Op, Dat ,Int, Bool, Str
+
+
 var	debugConsole : LineEdit
 var debugConsoleLbl : RichTextLabel
 var commandList : Array[Command]
@@ -30,11 +35,10 @@ func _ready():
 		Command.new("print:","","",func(_in : String):print("success")),
 		]
 	conditionPrefixRegex.compile(r'^(if:|elif:|else:)')
-	conditionWithTypeRegex.compile(r'(?<Condition>(?:%(?<Subject>\w+))\s+(?<Com>==|!=|<|<=|>|>=)\s+(?:(?:%(?<DatObj>\w+))|(?<IntObj>\d+)|(?<BoolObj>true|false)|(?:"(?<StrObj>.*?)")))(?:\s+(?<Keyword>(?<hasKW>and|or)|))(?(hasKW)(?<ConditionB>\s+(?&Condition)))')
-	statementWithTypeRegex.compile(r'then:\s*(?:%(?<Target>\w+))\s+(?<Op>=|!=|\+=|-=|\*=|\/=|prefix|suffix|prefix_|_suffix)\s*(?:%(?<DatVal>\w+)|(?<IntVal>\d+)|(?<BoolVal>true|false)|(?:"(?<StrVal>.*?)"))')
+	conditionWithTypeRegex.compile(r'(?<Condition>(?:%(?<Subject>\w+))\s+(?<Op>==|!=|<|<=|>|>=)\s+(?:(?:%(?<DatObj>\w+))|(?<IntObj>\d+)|(?<BoolObj>true|false)|(?:"(?<StrObj>.*?)")))(?:\s+(?<hasKW>and|or))?(?(hasKW)(?<ConditionB>\s+(?&Condition)))')
+	statementWithTypeRegex.compile(r'then:\s*(?:%(?<Subject>\w+))\s+(?<Op>=|!=|\+=|-=|\*=|\/=|prefix|suffix|prefix_|_suffix)\s*(?:%(?<DatObj>\w+)|(?<IntObj>\d+)|(?<BoolObj>true|false)|(?:"(?<StrObj>.*?)"))')
 	jumpRegex.compile(r'jump:\s*(?<Flag>\w+\s*?)')
-	#formatRegex.compile(r'format:\s*\[(?<Array>.*)\]')
-	#formatArrayRegex.compile(r'"(?<Str>.*?)"|%(?<Dat>\w+)')
+	
 	var createDebugConsole = func():
 		debugConsole = LineEdit.new()
 		debugConsole.top_level = true
@@ -89,7 +93,64 @@ func handle_input(_inputFull : String):
 				break
 			elif i == (commandList.size()-1):
 				push_error("Invalid Command ID")
-				
+func get_condition_statement_regex_returns(inRegexMatch : RegExMatch)-> Dictionary:
+	const OBJ_TYP = {
+		NULL = 0,
+		DAT = 0b0001, # 1
+		INT = 0b0011, # 3
+		BOOL = 0b0101, # 9
+		STRING = 0b1001 # 17
+	}
+	const KEY = {
+		SUBJECT = "Subject", OPERATION = "Op", 
+		OBJ_DAT = "DatObj", OBJ_INT = "IntObj", 
+		OBJ_BOOL = "BoolObj", OBJ_STR = "StrObj",
+		}
+	const SEARCH_KEY_OBJ_TYPE = [KEY.OBJ_DAT, KEY.OBJ_INT, KEY.OBJ_BOOL, KEY.OBJ_STR]
+	var subjectInMatch : String = inRegexMatch.get_string(KEY.SUBJECT)
+	var objInMatch : String
+	var objectType : OBJ_TYPE = OBJ_TYPE.NULL
+	#things to return
+	var subjectDatExist = GlobalData.data.has(subjectInMatch)
+	var finalSubject = GlobalData.data[subjectInMatch] if subjectDatExist else null
+	var operation = inRegexMatch.get_string(KEY.OPERATION)
+	var objectExist : bool
+	var finalObject = null
+	for key in SEARCH_KEY_OBJ_TYPE:
+		if inRegexMatch.names.has(key):
+			objInMatch = inRegexMatch.get_string(key)
+			match key:
+				KEY.OBJ_DAT:
+					objectType |= OBJ_TYPE.DAT
+					if GlobalData.data.has(objInMatch):
+						objectType |= OBJ_TYPE.EXIST
+						finalObject = GlobalData.data[objInMatch]	
+					pass
+				KEY.OBJ_INT:
+					objectType |= OBJ_TYPE.INT | OBJ_TYPE.EXIST
+					finalObject = int(objInMatch)
+					pass
+				KEY.OBJ_BOOL:
+					objectType |= OBJ_TYPE.BOOL | OBJ_TYPE.EXIST
+					if objInMatch == "true": finalObject = true
+					elif objInMatch == "false": finalObject = false
+					pass
+				KEY.OBJ_STR:
+					objectType |= OBJ_TYPE.STR | OBJ_TYPE.EXIST
+					finalObject = objInMatch
+					pass
+			objectExist = (objectType & OBJ_TYPE.EXIST) != OBJ_TYPE.EXIST #example 1001 and 0001 = 0001
+			break
+			#var subjectInMatch : String = inRegexMatch.get_string(KEY_SUBJECT)
+			#var subjectDatExist = GlobalData.data.has(subjectInMatch)
+			#var finalSubject = GlobalData.data[subjectInMatch] if subjectDatExist else null
+			#var operation = inRegexMatch.get_string(KEY_OPERATION)
+			#var objInMatch : String
+			#var objectExist : bool
+			#var finalObject = null
+	return{}
+	
+	
 func read_condition(step:String)-> bool:
 	var subConditionA = conditionWithTypeRegex.search(step)#conditionRegex.search(step)
 	if subConditionA == null:
@@ -116,38 +177,38 @@ func read_condition(step:String)-> bool:
 				objStr = condition.get_string(k) # get string of one of the obj match
 				match k:
 					"DatObj":
-						objType |= OBJ_DAT
+						objType |= OBJ_TYPE.DAT #OBJ_DAT
 						if GlobalData.data.has(objStr):
-							objType |= OBJ_EXIST
+							objType |= OBJ_TYPE.EXIST #OBJ_EXIST
 							object = GlobalData.data[objStr]
 					"IntObj":
-						objType |= OBJ_INT | OBJ_EXIST
+						objType |= OBJ_TYPE.INT | OBJ_TYPE.EXIST #OBJ_INT | OBJ_EXIST
 						object = int(objStr)
 					"BoolObj":
-						objType |= OBJ_BOOL | OBJ_EXIST
+						objType |= OBJ_TYPE.BOOL | OBJ_TYPE.EXIST #OBJ_BOOL | OBJ_EXIST
 						if objStr == "true": object = true
 						elif objStr == "false": object = false
 					"StrObj":
-						objType |= OBJ_STR | OBJ_EXIST
+						objType |= OBJ_TYPE.STR | OBJ_TYPE.EXIST #OBJ_STR | OBJ_EXIST
 						object = objStr
 				break
 		#if both don't exist, return false
-		if !subDatExist and (objType & OBJ_EXIST) != OBJ_EXIST: return false
+		if !subDatExist and (objType & OBJ_TYPE.EXIST) != OBJ_TYPE.EXIST: return false #OBJ_EXIST) != OBJ_EXIST: return false
 		var subject
 		if subDatExist: # if subject data exist
 			subject = GlobalData.data[subjStr]
-			if objType == OBJ_DAT: 
-				object = GlobalData.get_data(objStr, typeof(subject))
+			if objType == OBJ_TYPE.DAT: #OBJ_DAT: 
+				object = GlobalData.get_data(objStr, typeof(subject)) #if object doesn't exist, create one 
 		else: #subject data dont exist
-			subject = GlobalData.get_data(subjStr, typeof(object))
-			
-		var type = 	typeof(subject)
+			subject = GlobalData.get_data(subjStr, typeof(object)) #if subject doesn't exist, create one 
+		##too complicated, of either of them dont exist, return false 
+		var subjectType = 	typeof(subject)
 		#return if types dont match
-		if typeof(object) != type:
+		if typeof(object) != subjectType:
 			push_error("OBJECT TYPE DOES NOT MATCH SUBJECT TYPE")
 			debug_error("OBJECT TYPE DOES NOT MATCH SUBJECT TYPE")
 			return false
-		if type == TYPE_INT:
+		if subjectType == TYPE_INT:
 			match comparator:
 				"==": #int, bool, string
 					return subject == object
@@ -222,35 +283,6 @@ func read_condition_container(_arg:String):
 func validate_command_chain(input:String):
 	var thenCommands : Array[RegExMatch] = statementWithTypeRegex.search_all(input)
 	var jumpCommand : RegExMatch = jumpRegex.search(input)
-	#var formatCommand : RegExMatch = formatRegex.search(input)
-	#if formatCommand != null:
-		#var s = formatCommand.get_string("Array")
-		#var forMatchArr : Array[RegExMatch] = formatArrayRegex.search_all(s)
-		#var formatArr : Array[String] = []
-		#for rm in forMatchArr:
-			#if rm.names.has("Str"):
-				#formatArr.append(rm.get_string("Str"))
-			#elif rm.names.has("Dat"):
-				#var key = rm.get_string("Dat")
-				#if GlobalData.data.has(key):
-					#var dat = GlobalData.data[key]
-					#match typeof(dat):
-						#TYPE_STRING:
-							#formatArr.append(dat)
-						#TYPE_INT:
-							#formatArr.append(str(dat))
-						#TYPE_BOOL:
-							#if dat: formatArr.append(key+": true")
-							#else: formatArr.append(key+": false")
-						#_:
-							#push_error("ERROR: "+key+"DATA CANNOT BE CASTED TO STRING")
-							#debug_log(key+"DATA CANNOT BE CASTED TO STRING")
-							#formatArr.append(key)
-				#else:
-					#push_error("ERROR: "+key+"DATA CANNOT BE FOUND")
-					#debug_log(key+"DATA CANNOT BE FOUND")
-					#formatArr.append(key)
-		#GlobalData.currentDialogSystem.format_dialogline(formatArr)
 	#split out then: and jump: command
 	for tcmd in thenCommands:
 		var target = tcmd.get_string("Target")#
@@ -264,20 +296,20 @@ func validate_command_chain(input:String):
 				valStr = tcmd.get_string(k)
 				match k:
 					"DatVal":
-						_valType |= OBJ_DAT
+						_valType |= OBJ_TYPE.DAT#OBJ_DAT
 						if GlobalData.data.has(valStr):
-							_valType |= OBJ_EXIST
+							_valType |= OBJ_TYPE.EXIST #OBJ_EXIST
 					"IntVal":
-						_valType |= OBJ_INT | OBJ_EXIST
+						_valType |= OBJ_TYPE.INT | OBJ_TYPE.EXIST #OBJ_INT | OBJ_EXIST
 						val = int(valStr)
 					"BoolVal":
-						_valType |= OBJ_BOOL | OBJ_EXIST
+						_valType |= OBJ_TYPE.BOOL | OBJ_TYPE.EXIST #OBJ_BOOL | OBJ_EXIST
 						if valStr == "true": val = true
 						if valStr == "false": val = false
 					"StrVal":
-						_valType |= OBJ_STR | OBJ_EXIST
+						_valType |= OBJ_TYPE.STR | OBJ_TYPE.EXIST #OBJ_STR | OBJ_EXIST
 						val = valStr
-		GlobalData.set_data(target, val, operator)		
+		GlobalData.set_data(target, val, operator)#if data doesn't previously exist, it will create a new one
 	if jumpCommand == null: return
 	jump_statement(jumpCommand.get_string("Flag"))
 func jump_statement(_flag : String = ""):
