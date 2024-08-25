@@ -18,41 +18,41 @@ func get_data(key : String, type: Variant.Type = TYPE_INT):
 				data[key] = ""
 		print("This key, "+key+"=", data[key],", has either been created or overriden")
 	return data[key]
-func set_data(target : String, value, operator:String):
+func set_data(targetKey : String, value, operator:String):
 	var type = typeof(value)
-	var _tar = get_data(target, type) #makes sure target exist
+	var _tar = get_data(targetKey, type) #makes sure target exist
 	if type == TYPE_INT:
 		match operator:
 			"=":
-				data[target] = value
+				data[targetKey] = value
 			"+=":
-				data[target] += value
+				data[targetKey] += value
 			"-=":
-				data[target] -= value
+				data[targetKey] -= value
 			"*=":
-				data[target] *= value
+				data[targetKey] *= value
 			"/=":
 				if value != 0: #cannot divide by zero
-					data[target] /= value 
+					data[targetKey] /= value 
 				else:
 					push_warning("WARNING: tried to divide by 0")
 	elif type == TYPE_BOOL:
 		match operator:
 			"=":
-				data[target] = value
+				data[targetKey] = value
 			"!=":
-				data[target] != value
+				data[targetKey] != value
 	elif type == TYPE_STRING:
 		match operator:
 			"=":
-				data[target] = value
+				data[targetKey] = value
 			"+=":
-				data[target] += value
+				data[targetKey] += value
 			"prefix":
-				data[target] = value + data[target]
+				data[targetKey] = value + data[targetKey]
 			"suffix":
-				data[target] = data[target] + value 
+				data[targetKey] = data[targetKey] + value 
 			"prefix_":
-				data[target] = value +" "+ data[target]
+				data[targetKey] = value +" "+ data[targetKey]
 			"_suffix":
-				data[target] = data[target] +" "+ value 
+				data[targetKey] = data[targetKey] +" "+ value 
