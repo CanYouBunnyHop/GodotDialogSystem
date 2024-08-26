@@ -19,8 +19,10 @@ var dialogCaptureRegex = RegEx.new()
 var buttonInstructRegex = RegEx.new()
 var flagRegex = RegEx.new()
 var bbtagRegex = RegEx.new()
+var stampRegex = RegEx.new()
 
 var lockScene : bool = false
+#var readTweens : Array[Tween]
 var readTween : Tween
 func _ready():
 	commandCaptureRegex.compile(r'^(?<Button>>\s*)?(?:\((?<BoxA>[^\(\)]*)\))?(?<Line>.*?)\s*(?:\((?!.*\()(?<BoxB>[^\(\)]*)\))?$')
@@ -28,6 +30,7 @@ func _ready():
 	buttonInstructRegex.compile(r'(?<Instruction>\bdisable:|\bhide:)')
 	flagRegex.compile(r'^--(?<Flag>\s*\w+\s*)--')
 	bbtagRegex.compile(r'^(?<Tag>\w+)(?<Param>( |=|).*)')
+	stampRegex.compile(r'\*(?<Speed>\d+)\*')
 	read_conversationFile(file)
 	print("Array size = {size}".format({"size": currentConversation.size()}))
 	#for testing
@@ -68,6 +71,9 @@ func get_line(_n = 0)->String:
 		return line.strip_edges()
 
 func play_next_dialog(_flagName : String = ""):
+	#if readTweens.any(func(tween:Tween): return tween.is_running()):
+		#for tw in readTweens: 
+			#tw.kill()
 	if readTween and readTween.is_running():
 		readTween.kill()
 		dialogBox.visible_ratio = 1
@@ -184,31 +190,129 @@ func create_choice_button(_line):
 func display_dialogline(dialogLine: String, _name:String = "", _bbtag:String = ""):
 	var gChData = GlobalData.characterDataDict
 	var curCharacterData : CharacterBaseResource
-	var bbname = _name
-	if !_name.is_empty():
-		if gChData.has(_name) && gChData[_name] is CharacterBaseResource:
-			curCharacterData = gChData[_name]
+	var realName = _name.format(GlobalData.data)
+	var bbname = realName
+	if !realName.is_empty():
+		if gChData.has(realName) && gChData[realName] is CharacterBaseResource:
+			curCharacterData = gChData[realName]
 			bbname = apply_font_setting(bbname, curCharacterData.nameFontSettings)
 		else : #use default if characterBaseResource is not found
 			bbname = apply_font_setting(bbname, settings.defaultNameSettings)
 		bbname = apply_bbcode(bbname+":","b")
+	
+	#var textWithStamp : String = _name+":"+dialogLine #without bbcode
+	#var stamps : Array[RegExMatch] = stampRegex.search_all(textWithStamp) #find stamps
+	#var realStartPositions : Array[int] = []
+	#if stamps != null:
+		#var counter = 0
+		#for stmp in stamps:
+			#var startPos = stmp.get_start()
+			#var count = stmp.get_string().length()
+			#counter += (startPos-count)
+			#realStartPositions.append(counter)
+			#var textNoStamp = textWithStamp.erase(startPos, count)
+			#dialogLine = textNoStamp.trim_prefix(_name+":")
+	
+	var realDialogLine = dialogLine.format(GlobalData.data)
+	#seperate the dialog line with stamps
+	var lineSections : PackedStringArray
+	var stampList : Array[int]
+	var curDialogSlice = realDialogLine
+	var slices : PackedStringArray
+	
+	if stampRegex.search(realDialogLine) != null: #start loop if there there are stamp in dialogline
+		while stampRegex.search(curDialogSlice) != null:#this loop splits line into sections
+			var stamp = stampRegex.search(curDialogSlice)
+			stampList.append(int(stamp.get_string("Speed"))) #append speed in the stamp
+			slices = curDialogSlice.split(stamp.get_string(),true)
+			lineSections.append(slices[0]) #append first slice
+			curDialogSlice = slices[1]
+		if slices.size() > 1: #after while loop, append the last slice
+			lineSections.append(slices[1]) 
+	else: lineSections.append(realDialogLine)
+	#join line sections
+	realDialogLine = "".join(lineSections)
+	
+	var bbDialogLine = realDialogLine
 	if _bbtag != "":
 		var bbtagChain = _bbtag.split(",")
 		for bb in bbtagChain:
 			var bbt = bbtagRegex.search(bb.strip_edges())
 			var tag = bbt.get_string("Tag")
 			var param = bbt.get_string("Param")
-			dialogLine = apply_bbcode(dialogLine, tag, param)
-	dialogBox.visible_characters = 0;
-	var fullLine = bbname + dialogLine
-	dialogBox.text = fullLine.format(GlobalData.data)
+			bbDialogLine = apply_bbcode(realDialogLine, tag, param)
 	
-	var length = dialogBox.get_total_character_count()
-	if readTween: readTween.kill()
-	readTween = create_tween()
+	dialogBox.visible_characters = 0
+	var fullLine = (bbname+bbDialogLine)
+	dialogBox.text = fullLine
+	
+	#if readTweens.any(func(tween:Tween): return tween.is_running()):
+		#for tw in readTweens: 
+			#tw.kill()
+	#if previous tween is running, kill it, not nessasary, but just in case
+	if readTween and readTween.is_running(): readTween.kill()
+	readTween = create_tween() #only create once, or else it will override
 	readTween.set_trans(Tween.TRANS_LINEAR)
-	readTween.set_speed_scale(settings.readingSpeed)
-	readTween.tween_property(dialogBox,"visible_characters", length, 1).from(_name.length() + 1)
+	var startPosition = realName.length()+1 #plus the ":" count
+	for i in range(0, lineSections.size()):
+		var sectionLength = lineSections[i].length()
+		var speed:float = settings.readingSpeed
+		if i != 0:
+			speed = stampList[i-1]
+		var destination : float = startPosition + sectionLength
+		var distance = abs(destination - startPosition)
+		var delta = destination/speed
+		#tween property
+		readTween.chain().tween_property(dialogBox,"visible_characters", destination, delta).from(startPosition)
+		startPosition = destination #this destination the next start position 
+		
+		#readTween.tween_property(dialogBox,"visible_ratio")
+		
+	#if stamps:
+		#for s in stamps:
+			#var newTween = create_tween()
+			#newTween.set_trans(Tween.TRANS_LINEAR)
+			#var speed = s.get_string("Speed")
+			#newTween.set_speed_scale(int(speed))
+			#readTweens.append(newTween)
+	#var readTween = create_tween()
+	#var realEnd = dialogBox.get_total_character_count() if !realStartPositions else realStartPositions[0]
+	#readTween.set_trans(Tween.TRANS_LINEAR)
+	#readTween.set_speed_scale(settings.readingSpeed)
+	#readTween.tween_property(dialogBox,"visible_characters", realEnd, 1).from(_name.length() + 1)
+	#await !readTween.is_running()
+	#
+	#if stamps != null:		
+		#for i in range(0, stamps.size()):
+			#var newTween = create_tween()
+			#newTween.set_trans(Tween.TRANS_LINEAR)
+			#var speed = stamps[i].get_string("Speed")
+			#newTween.set_speed_scale(int(speed))
+			#var start = realStartPositions[i]
+			#var end =  dialogBox.get_total_character_count() if i+1 > realStartPositions.size()-1 else realStartPositions[i+1]
+			
+			#var totalLength = 0
+			#for c in range(0, stamps.size()-i):
+				#totalLength += stamps[i].get_start()
+			#var length = dialogBox.get_total_character_count() if (i+1)>(stamps.size()-1) else stamps[i+1].get_start()-totalLength
+			
+			#newTween.tween_property(dialogBox,"visible_characters", end, 1).from(start)
+			#await newTween.loop_finished
+			
+			#readTweens.append(newTween)
+			#pass
+	#else:
+		#var newTween = create_tween()
+		#newTween.set_trans(Tween.TRANS_LINEAR)
+		#newTween.set_speed_scale(settings.readingSpeed)
+		#var length = dialogBox.get_total_character_count()
+		#newTween.tween_property(dialogBox,"visible_characters", length, 1).from(_name.length()+1)
+		#readTweens.append(newTween)
+		
+	#readTween = create_tween()
+	#readTween.set_trans(Tween.TRANS_LINEAR)
+	#readTween.set_speed_scale(settings.readingSpeed)
+	#readTween.tween_property(dialogBox,"visible_characters", length, 1).from(_name.length() + 1)
 	print(str(currentLine) + ":" + get_line())
 	
 #func format_dialogline(formatArray : Array[String]):

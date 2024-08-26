@@ -98,7 +98,7 @@ func handle_input(_inputFull : String):
 				break
 			elif i == (commandList.size()-1):
 				push_error("Invalid Command ID")
-class ExpressionRegExResult: #change to struct if it's available
+class CmdExpressionResult: #change to struct if it's available
 	var subjectExist : bool
 	var subject
 	var subjectKey : String
@@ -112,13 +112,13 @@ class ExpressionRegExResult: #change to struct if it's available
 		self.operation = op 
 		self.objectExist = objExist
 		self.object = obj
-func get_expression_regex_returns(inRegexMatch : RegExMatch)-> ExpressionRegExResult:
+func get_expression_regex_returns(inRegexMatch : RegExMatch)-> CmdExpressionResult:
 	const OBJ_TYPE = {
 		NULL = 0,
-		DAT = 0b0001, # 1
-		INT = 0b0011, # 3
-		BOOL = 0b0101, # 9
-		STRING = 0b1001 # 17
+		DAT = 1,#0b0001, # 1
+		INT = 2,#0b0011, # 3
+		BOOL = 3,#0b0101, # 9
+		STRING = 4,#0b1001 # 17
 	}
 	const KEY = {
 		SUBJECT = "Subject", OPERATION = "Op", 
@@ -143,9 +143,6 @@ func get_expression_regex_returns(inRegexMatch : RegExMatch)-> ExpressionRegExRe
 					if GlobalData.data.has(objInMatch):
 						objectType = OBJ_TYPE.DAT
 						finalObject = GlobalData.data[objInMatch]
-					#else:
-						#push_error("ERROR: OBJECT ",objInMatch,", IS NOT FOUND IN GLOBALDATA" )
-						#debug_log("OBJECT "+objInMatch+", IS NOT FOUND IN GLOBALDATA" )
 				KEY.OBJ_INT:
 					objectType = OBJ_TYPE.INT
 					finalObject = int(objInMatch)
@@ -158,7 +155,7 @@ func get_expression_regex_returns(inRegexMatch : RegExMatch)-> ExpressionRegExRe
 					finalObject = objInMatch
 			objectExist = objectType != OBJ_TYPE.NULL
 			break
-	return ExpressionRegExResult.new(subjectDatExist, subjectInMatch, finalSubject, operation, objectExist, finalObject)
+	return CmdExpressionResult.new(subjectDatExist, subjectInMatch, finalSubject, operation, objectExist, finalObject)
 	
 func read_condition(step:String)-> bool:
 	var subConditionA = conditionWithTypeRegex.search(step)#conditionRegex.search(step)
@@ -172,52 +169,13 @@ func read_condition(step:String)-> bool:
 			push_error("CONDITION NOT FOUND, CHECK FOR SYNTAX ERROR")
 			debug_error("CONDITION NOT FOUND, CHECK FOR SYNTAX ERROR")
 			return false
-		var conRXResult : ExpressionRegExResult = get_expression_regex_returns(condition)
-		#var comparator : String = condition.get_string("Com")
-		#var subjStr = condition.get_string("Subject")
-		#var objStr
-		##find which one exist
-		#var subDatExist : bool = false
-		#var objType : int = 0
-		#var object
-		#if GlobalData.data.has(subjStr): subDatExist = true
-		#var searchObjKey : Array[String] = ["DatObj","IntObj","BoolObj","StrObj"]
-		#for k in searchObjKey:
-			#if condition.names.has(k):
-				#objStr = condition.get_string(k) # get string of one of the obj match
-				#match k:
-					#"DatObj":
-						#objType |= OBJ_TYPE.DAT #OBJ_DAT
-						#if GlobalData.data.has(objStr):
-							#objType |= OBJ_TYPE.EXIST #OBJ_EXIST
-							#object = GlobalData.data[objStr]
-					#"IntObj":
-						#objType |= OBJ_TYPE.INT | OBJ_TYPE.EXIST #OBJ_INT | OBJ_EXIST
-						#object = int(objStr)
-					#"BoolObj":
-						#objType |= OBJ_TYPE.BOOL | OBJ_TYPE.EXIST #OBJ_BOOL | OBJ_EXIST
-						#if objStr == "true": object = true
-						#elif objStr == "false": object = false
-					#"StrObj":
-						#objType |= OBJ_TYPE.STR | OBJ_TYPE.EXIST #OBJ_STR | OBJ_EXIST
-						#object = objStr
-				#break
-		#if both don't exist, return false
-		#if !subDatExist and (objType & OBJ_TYPE.EXIST) != OBJ_TYPE.EXIST: return false #OBJ_EXIST) != OBJ_EXIST: return false
-		#var subject
-		#if subDatExist: # if subject data exist
-			#subject = GlobalData.data[subjStr]
-			#if objType == OBJ_TYPE.DAT: #OBJ_DAT: 
-				#object = GlobalData.get_data(objStr, typeof(subject)) #if object doesn't exist, create one 
-		#else: #subject data dont exist
-			#subject = GlobalData.get_data(subjStr, typeof(object)) #if subject doesn't exist, create one
-		
-		##too complicated, of either of them dont exist, return false
-		if not conRXResult.objectExist or not conRXResult.subjectExist: return false
-		var subject = conRXResult.subject
-		var object = conRXResult.object
+		var comCmdExResult : CmdExpressionResult = get_expression_regex_returns(condition)
+		#too complicated, of either of them dont exist, return false
+		if not comCmdExResult.objectExist or not comCmdExResult.subjectExist: return false
+		var subject = comCmdExResult.subject
+		var object = comCmdExResult.object
 		var subjectType = 	typeof(subject)
-		var comparator = conRXResult.operation
+		var comparator = comCmdExResult.operation
 		#return if types dont match
 		if typeof(object) != subjectType:
 			push_error("OBJECT TYPE DOES NOT MATCH SUBJECT TYPE")
@@ -300,34 +258,10 @@ func validate_command_chain(input:String):
 	var jumpCommand : RegExMatch = jumpRegex.search(input)
 	#split out then: and jump: command
 	for tcmd in thenCommands:
-		var stmntRXResult = get_expression_regex_returns(tcmd)
-		#var target = tcmd.get_string("Target")#
-		#var operator = tcmd.get_string("Op")#
-		#var valStr#
-		#var _valType : int = 0#
-		#var val#
-		#var searchValType : Array = ["DatVal", "IntVal", "BoolVal", "StrVal"]#
-		#for k in searchValType:
-			#if tcmd.names.has(k):
-				#valStr = tcmd.get_string(k)
-				#match k:
-					#"DatVal":
-						#_valType |= OBJ_TYPE.DAT#OBJ_DAT
-						#if GlobalData.data.has(valStr):
-							#_valType |= OBJ_TYPE.EXIST #OBJ_EXIST
-					#"IntVal":
-						#_valType |= OBJ_TYPE.INT | OBJ_TYPE.EXIST #OBJ_INT | OBJ_EXIST
-						#val = int(valStr)
-					#"BoolVal":
-						#_valType |= OBJ_TYPE.BOOL | OBJ_TYPE.EXIST #OBJ_BOOL | OBJ_EXIST
-						#if valStr == "true": val = true
-						#if valStr == "false": val = false
-					#"StrVal":
-						#_valType |= OBJ_TYPE.STR | OBJ_TYPE.EXIST #OBJ_STR | OBJ_EXIST
-						#val = valStr
-		var targetKey = stmntRXResult.subjectKey
-		var value = stmntRXResult.object
-		var operator = stmntRXResult.operation
+		var assgnmntCmdExResult : CmdExpressionResult = get_expression_regex_returns(tcmd)
+		var targetKey = assgnmntCmdExResult.subjectKey
+		var value = assgnmntCmdExResult.object
+		var operator = assgnmntCmdExResult.operation
 		GlobalData.set_data(targetKey, value, operator)#if data doesn't previously exist, it will create a new one
 	if jumpCommand == null: return
 	jump_statement(jumpCommand.get_string("Flag"))

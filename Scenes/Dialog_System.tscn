@@ -32,6 +32,7 @@ settings = NodePath("DialogSystemSettings")
 script = ExtResource("2_w80hb")
 dialogBox = NodePath("Panel/RichTextLabel")
 chResources = Array[ExtResource("3_rljsg")]([ExtResource("4_fe2ak")])
+readingSpeed = 20.0
 useOverrideNameColor = null
 
 [node name="Panel" type="Panel" parent="DialogSystemSettings"]
@@ -63,7 +64,7 @@ theme_override_constants/outline_size = 1
 theme_override_constants/shadow_offset_y = 0
 theme_override_constants/shadow_offset_x = 0
 bbcode_enabled = true
-text = "tessssssssssssssssssssssssssssssss"
+text = "[rs speed=25]standard reading speed can be very slow, this is quite a long line of text[/rs][rs speed=1000 delay=3], this part will be significantly faster[/rs]"
 scroll_active = false
 shortcut_keys_enabled = false
 custom_effects = [SubResource("RichTextEffect_pwlq5"), SubResource("RichTextEffect_dhnip")]

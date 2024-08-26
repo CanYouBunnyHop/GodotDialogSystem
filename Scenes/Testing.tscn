@@ -1,12 +1,18 @@
-[gd_scene load_steps=2 format=3 uid="uid://cqvrp2dryk13f"]
+[gd_scene load_steps=3 format=3 uid="uid://cqvrp2dryk13f"]
 
 [ext_resource type="Script" path="res://TestRegEx.gd" id="1_xucod"]
+[ext_resource type="Texture2D" uid="uid://bnxq5dre0llr6" path="res://icon.svg" id="2_fiwph"]
 
 [node name="Control" type="Control"]
 layout_mode = 3
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
+anchor_right = 1.6
+anchor_bottom = 1.88
+offset_right = -691.2
+offset_bottom = -570.24
 grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_xucod")
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+position = Vector2(200, 200)
+texture = ExtResource("2_fiwph")
