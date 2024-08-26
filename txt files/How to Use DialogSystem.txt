@@ -37,7 +37,18 @@ format = you can use placeholder example,
 int and bool are also casted to string
 <[BBTag]> apply BBCode to the dialog, also allows parameters override, if multiple tags are inputted split them using ","
 "" default = if condition is false, the text and command boxB will be skipped over
-maybe will add instruction...
+Stamps
+*<speed>D<delay>*
+<speed> = have a new reading speed 
+<delay> = add a delay before playing
+within the dialog you can place a stamp, this will determine the read speed and delay of the following text.
+
+for example:
+Time is ticking*5*... *0D1.5*BOOM
+stamp1 = *5*
+stamp2 = *0D1.5*
+The text will play normally until it reaches a stamp. In stamp1, it changes the speed to 5.
+In stamp2, it changes the speed to 0, which will be instant, and it will be delayed by 1.5 seconds
 
 choices
 > (BoxA) <text> (BoxB)
