@@ -23,71 +23,92 @@ var jumpRegex = RegEx.new()
 #"DatObj","IntObj","BoolObj","StrObj"
 #Subject, Op, Dat ,Int, Bool, Str
 
-
-var	debugConsole : LineEdit
+var	debugConsoleEdit : LineEdit
 var debugConsoleLbl : RichTextLabel
 var commandList : Array[Command]
+func command_helper(input:String):
+	var splits:PackedStringArray = input.split(" ", false, 2)
+	if splits.size() == 1:
+		var cmdIDs : PackedStringArray=commandList.map(func(c:Command):return c.ID)
+		debug_log(" ".join(cmdIDs))
+		debug_log(r'See more info by adding command to help. eg: "/help: help:"')
+	else: #when larger than 1
+		var cmdArg = splits[1]
+		for c in commandList:
+			if cmdArg == c.ID:
+				debug_log("command: {0}\ndescription: {1}\nformat:{2}".format([c.ID, c.description, c.format]))
+				return
+		debug_error("Invalid help command argument")
 func _ready():
+	#a command callable has to take in a string parameter
 	commandList = [
+		Command.new("help:", "See command list or more infor about a certain command", "help: <CommandID>",
+		command_helper),
 		Command.new("if:", "Checks Condition, if true, then do action",
-		"<if:|elif:|else:> <subject> <comparator> <object> <and|or> <second condition> <?> <command> <;>",
+		"<if:|elif:|else:> <subject> <comparator> <object> <and|or> <second condition> <;>",
 		read_condition_container),
 		Command.new("then:", "Updates variable or creates a new one if it doesn't exist", 
 		"then: <target> <operator> <value>", validate_command_chain),
 		Command.new("jump:", "jump to a flag in the conversation", "jump: <flag>", validate_command_chain),
-		Command.new("emotion:", "change current portrait to specified portrait","emotion: <name> <emotion>", 
-		validate_command_chain),
+		#Command.new("emotion:", "change current portrait to specified portrait","emotion: <name> <emotion>", 
+		#validate_command_chain),
 		Command.new("print:","","",func(_in : String):print("success")),
 		]
 	conditionPrefixRegex.compile(r'^(if:|elif:|else:)')
 	conditionWithTypeRegex.compile(r'(?<Condition>(?:%(?<Subject>\w+))\s+(?<Op>==|!=|<|<=|>|>=)\s+(?:(?:%(?<DatObj>\w+))|(?<IntObj>\d+)|(?<BoolObj>true|false)|(?:"(?<StrObj>.*?)")))(?:\s+(?<hasKW>and|or))?(?(hasKW)(?<ConditionB>\s+(?&Condition)))')
-	statementWithTypeRegex.compile(r'then:\s*(?:%(?<Subject>\w+))\s+(?<Op>=|!=|\+=|-=|\*=|\/=|prefix|suffix|prefix_|_suffix)\s*(?:%(?<DatObj>\w+)|(?<IntObj>\d+)|(?<BoolObj>true|false)|(?:"(?<StrObj>.*?)"))')
+	statementWithTypeRegex.compile(r'then:\s*(?:%(?<Subject>\w+))\s+(?<Op>[^= ]*=)\s*(?:%(?<DatObj>\w+)|(?<IntObj>\d+)|(?<BoolObj>true|false)|(?:"(?<StrObj>.*?)"))')
 	jumpRegex.compile(r'jump:\s*(?<Flag>\w+\s*?)')
-	
 	var createDebugConsole = func():
-		debugConsole = LineEdit.new()
-		debugConsole.top_level = true
-		debugConsole.set_anchor(SIDE_RIGHT, 1)
-		debugConsole.offset_left = 15
-		debugConsole.offset_top = 15
-		debugConsole.offset_right = -15
-		#label stuff
+		debugConsoleEdit = LineEdit.new()
+		debugConsoleEdit.top_level = true
+		debugConsoleEdit.set_anchor(SIDE_RIGHT, 1)
+		debugConsoleEdit.offset_left = 15
+		debugConsoleEdit.offset_top = 15
+		debugConsoleEdit.offset_right = -15
+		#construct label
 		debugConsoleLbl = RichTextLabel.new()
+		debugConsoleLbl.top_level = true
+		debugConsoleLbl.scroll_active = true
+		debugConsoleLbl.scroll_following = true
 		debugConsoleLbl.set_anchor(SIDE_RIGHT, 1)
 		debugConsoleLbl.offset_left = 15
-		debugConsoleLbl.offset_top = 32
+		debugConsoleLbl.offset_top = 46
 		debugConsoleLbl.offset_right = -15
-		debugConsoleLbl.offset_bottom = 200
+		debugConsoleLbl.offset_bottom = 210
 		debugConsoleLbl.bbcode_enabled = true
-		add_child(debugConsole)
-		debugConsole.add_child(debugConsoleLbl)
-		debugConsole.visible = false
+		add_child(debugConsoleEdit)
+		debugConsoleEdit.add_child(debugConsoleLbl)
+		debugConsoleEdit.visible = false
 	createDebugConsole.call()
-	debugConsole.text_submitted.connect(enter_text_input)
+	debugConsoleEdit.text_submitted.connect(enter_text_input)
 	#Command_Listener.handle_input("if: a is true ? then: b is false; else: then: b is true")
 	#handle_input("print:")
 #func printS(input : String):
 	#print("success")
 func _input(event: InputEvent) -> void:
 	if event.is_action_released("OpenDebugConsole"):
-		debugConsole.visible = not debugConsole.visible
-		debugConsole.grab_focus()
-
+		debugConsoleEdit.visible = not debugConsoleEdit.visible
+		debugConsoleEdit.grab_focus()
 func enter_text_input(input:String):
-	if input.begins_with("/"):
-			handle_input(input.trim_prefix("/"))
-	debug_log(input)
-	debugConsole.clear()
-
+	if input.begins_with("/"): handle_input(input.trim_prefix("/"))
+	else: debug_log("User: "+input)
+	debugConsoleEdit.clear()
+func debug_warn(input:String):
+	var warn = "[color=orange]"+"WARNING: "+input+"[/color]"
+	push_warning(input)
+	print_rich(warn)
+	debugConsoleLbl.append_text(warn)
+	debugConsoleLbl.newline()
 func debug_error(input:String):
 	var err = "[color=red]"+"ERROR: "+input+"[/color]"
+	push_error(input)
+	print_rich(err)
 	debugConsoleLbl.append_text(err)
 	debugConsoleLbl.newline()
-	
 func debug_log(input : String):
+	print(input)
 	debugConsoleLbl.add_text(input)
 	debugConsoleLbl.newline()
-		
 func handle_input(_inputFull : String):
 	var commandInputs = _inputFull.split(",", false)
 	for input in commandInputs:
@@ -97,7 +118,7 @@ func handle_input(_inputFull : String):
 				c.execute(input)
 				break
 			elif i == (commandList.size()-1):
-				push_error("Invalid Command ID")
+				debug_error("Invalid Command ID")
 class CmdExpressionResult: #change to struct if it's available
 	var subjectExist : bool
 	var subject
@@ -114,18 +135,14 @@ class CmdExpressionResult: #change to struct if it's available
 		self.object = obj
 func get_expression_regex_returns(inRegexMatch : RegExMatch)-> CmdExpressionResult:
 	const OBJ_TYPE = {
-		NULL = 0,
-		DAT = 1,#0b0001, # 1
-		INT = 2,#0b0011, # 3
-		BOOL = 3,#0b0101, # 9
-		STRING = 4,#0b1001 # 17
-	}
+		NULL = 0, DAT = 1, INT = 2,
+		BOOL = 3, STRING = 4,
+		}
 	const KEY = {
 		SUBJECT = "Subject", OPERATION = "Op", 
 		OBJ_DAT = "DatObj", OBJ_INT = "IntObj", 
 		OBJ_BOOL = "BoolObj", OBJ_STR = "StrObj",
 		}
-	const SEARCH_KEY_OBJ_TYPE = [KEY.OBJ_DAT, KEY.OBJ_INT, KEY.OBJ_BOOL, KEY.OBJ_STR]
 	var objInMatch : String
 	var objectType = OBJ_TYPE.NULL
 	#things to return
@@ -135,7 +152,7 @@ func get_expression_regex_returns(inRegexMatch : RegExMatch)-> CmdExpressionResu
 	var operation = inRegexMatch.get_string(KEY.OPERATION)
 	var objectExist : bool
 	var finalObject = null
-	for key in SEARCH_KEY_OBJ_TYPE:
+	for key in [KEY.OBJ_DAT, KEY.OBJ_INT, KEY.OBJ_BOOL, KEY.OBJ_STR]:
 		if inRegexMatch.names.has(key):
 			objInMatch = inRegexMatch.get_string(key)
 			match key:
@@ -160,58 +177,63 @@ func get_expression_regex_returns(inRegexMatch : RegExMatch)-> CmdExpressionResu
 func read_condition(step:String)-> bool:
 	var subConditionA = conditionWithTypeRegex.search(step)#conditionRegex.search(step)
 	if subConditionA == null:
-		push_error("INVALID CONDITION: "+step)
 		debug_error("INVALID CONDITION: "+step)
 		return false
 	var finalResults : Array = []
 	var subConditionResult = func(condition : RegExMatch) -> bool:
-		if condition == null:
-			push_error("CONDITION NOT FOUND, CHECK FOR SYNTAX ERROR")
+		if condition == null: #probably not needed, but just in case
 			debug_error("CONDITION NOT FOUND, CHECK FOR SYNTAX ERROR")
 			return false
+		#will return the real typing for those variables
 		var comCmdExResult : CmdExpressionResult = get_expression_regex_returns(condition)
-		#too complicated, of either of them dont exist, return false
+		#if either of them dont exist, return false
 		if not comCmdExResult.objectExist or not comCmdExResult.subjectExist: return false
 		var subject = comCmdExResult.subject
 		var object = comCmdExResult.object
-		var subjectType = 	typeof(subject)
+		var subjectType = typeof(subject)
 		var comparator = comCmdExResult.operation
-		#return if types dont match
-		if typeof(object) != subjectType:
-			push_error("OBJECT TYPE DOES NOT MATCH SUBJECT TYPE")
-			debug_error("OBJECT TYPE DOES NOT MATCH SUBJECT TYPE")
+		
+		var comparison := Expression.new()
+		comparison.parse("{0}{1}{2}".format([subject,comparator,object]))
+		var comparisonResult = comparison.execute()
+		#return false if types dont match or invalid operator
+		if comparison.has_execute_failed(): 
+			var err = comparison.get_error_text()
+			debug_error(err+" "+condition.get_string())
 			return false
-		if subjectType == TYPE_INT:
-			match comparator:
-				"==": #int, bool, string
-					return subject == object
-				"!=": #int, bool, string
-					return subject != object
-				"<":
-					return subject < object
-				"<=":
-					return subject <= object
-				">":
-					return subject > object
-				">=":
-					return subject >= object
-				_:
-					push_error("ERROR: Invalid command comparator")
-					debug_error("ERROR: Invalid command comparator")
-					return false
-		else: #not an interger
-			match comparator:
-				"==": #int, bool, string
-					return subject == object
-				"!=": #int, bool, string
-					return subject != object
-				_:
-					push_error("ERROR: Invalid command comparator")
-					debug_error("ERROR: Invalid command comparator")
-					return false
+		else:
+			return comparisonResult
+		#if subjectType == TYPE_INT:
+			#match comparator:
+				#"==": #int, bool, string
+					#return subject == object
+				#"!=": #int, bool, string
+					#return subject != object
+				#"<":
+					#return subject < object
+				#"<=":
+					#return subject <= object
+				#">":
+					#return subject > object
+				#">=":
+					#return subject >= object
+				#_:
+					#push_error("ERROR: Invalid command comparator")
+					#debug_error("ERROR: Invalid command comparator")
+					#return false
+		#else: #not an interger
+			#match comparator:
+				#"==": #int, bool, string
+					#return subject == object
+				#"!=": #int, bool, string
+					#return subject != object
+				#_:
+					#push_error("ERROR: Invalid command comparator")
+					#debug_error("ERROR: Invalid command comparator")
+					#return false
 	finalResults.append(subConditionResult.call(subConditionA)) #return result if keyword dont exist
-	var keyWord = subConditionA.get_string("Keyword")
-	match keyWord:
+	#var keyWord = subConditionA.get_string("Keyword")
+	match subConditionA.get_string("Keyword"):
 		"and":
 			var subConditionB = conditionWithTypeRegex.search(subConditionA.get_string("ConditionB"))
 			finalResults.append(subConditionResult.call(subConditionB))
@@ -251,7 +273,6 @@ func read_condition_container(_arg:String):
 			CmdListener.handle_input(step)
 			break
 		else:
-			push_error("Invalid Condition Container")
 			debug_error("Invalid Condition Container")
 func validate_command_chain(input:String):
 	var thenCommands : Array[RegExMatch] = statementWithTypeRegex.search_all(input)

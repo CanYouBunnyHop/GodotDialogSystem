@@ -1,11 +1,12 @@
 
 #{name}: My name is {name}
-Jeff: This is part one *25D.5*this is part 2 *10D1*part three *0D3*BAM, this is instant
-Sam: This is line three
-Sam: This is line four
-Red: Testing
+#Jeff: This is part one *25D.5*this is part 2 *10D1*part three *0D3*BAM, this is instant
+#Sam: This is line three
+#Sam: This is line four
+#Red: Testing
 
 #()(then: %b = true)
 #()(if: %b <= 0 then: %c = 1 ; elif: %b <= 5 then: %c = 2 ; else: then: %c = 3)
 #(if: %b == 10)Jeff:[font_size=20]This[/font_size] is {c}[b, color=teal, wave]
-#stuff
+()(then: %custom = 0)
+stuff happens(then: %custom = true)

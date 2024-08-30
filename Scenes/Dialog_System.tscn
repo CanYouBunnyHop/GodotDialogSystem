@@ -36,14 +36,14 @@ readingSpeed = 20.0
 useOverrideNameColor = null
 
 [node name="Panel" type="Panel" parent="DialogSystemSettings"]
-offset_left = 25.0
-offset_top = 517.0
-offset_right = 1134.0
-offset_bottom = 627.0
+anchors_preset = -1
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = 520.0
 mouse_filter = 1
 
 [node name="DialogPortrait" type="Sprite2D" parent="DialogSystemSettings/Panel"]
-position = Vector2(66, 56)
+position = Vector2(69, 61)
 scale = Vector2(3.09375, 2.79719)
 texture = ExtResource("5_s3fip")
 hframes = 7
@@ -52,10 +52,12 @@ frame = 22
 
 [node name="RichTextLabel" type="RichTextLabel" parent="DialogSystemSettings/Panel"]
 layout_mode = 1
-offset_left = 146.0
-offset_top = 22.0
-offset_right = 1050.0
-offset_bottom = 474.0
+anchors_preset = -1
+anchor_right = 1.0
+offset_left = 150.0
+offset_top = 30.0
+offset_right = -150.0
+offset_bottom = 400.0
 mouse_filter = 1
 theme_override_colors/default_color = Color(1, 1, 1, 1)
 theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
@@ -70,10 +72,17 @@ shortcut_keys_enabled = false
 custom_effects = [SubResource("RichTextEffect_pwlq5"), SubResource("RichTextEffect_dhnip")]
 
 [node name="Button Container" type="VBoxContainer" parent="DialogSystemSettings"]
-offset_left = 207.0
-offset_top = 101.0
-offset_right = 957.0
-offset_bottom = 389.0
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -376.0
+offset_top = -144.0
+offset_right = 374.0
+offset_bottom = 156.0
+grow_horizontal = 2
+grow_vertical = 2
 alignment = 1
 
 [node name="Button" type="Button" parent="DialogSystemSettings/Button Container"]

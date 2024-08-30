@@ -22,7 +22,6 @@ var bbtagRegex = RegEx.new()
 var stampRegex = RegEx.new()
 
 var lockScene : bool = false
-#var readTweens : Array[Tween]
 var readTween : Tween
 func _ready():
 	commandCaptureRegex.compile(r'^(?<Button>>\s*)?(?:\((?<BoxA>[^\(\)]*)\))?(?<Line>.*?)\s*(?:\((?!.*\()(?<BoxB>[^\(\)]*)\))?$')
@@ -30,7 +29,7 @@ func _ready():
 	buttonInstructRegex.compile(r'(?<Instruction>\bdisable:|\bhide:)')
 	flagRegex.compile(r'^--(?<Flag>\s*\w+\s*)--')
 	bbtagRegex.compile(r'^(?<Tag>\w+)(?<Param>( |=|).*)')
-	stampRegex.compile(r'\*(?<Speed>(?:[0-9]*[.])?[0-9]+)(?:D(?<Delay>([0-9]*[.])?[0-9]+))?\*')
+	stampRegex.compile(r'\*(?<Speed>(?:[0-9]*[.])?[0-9]+)?(?:D(?<Delay>([0-9]*[.])?[0-9]+))\*|\*(?<Speed2>(?&Speed))\*')
 	read_conversationFile(file)
 	print("Array size = {size}".format({"size": currentConversation.size()}))
 	#for testing
@@ -71,9 +70,6 @@ func get_line(_n = 0)->String:
 		return line.strip_edges()
 
 func play_next_dialog(_flagName : String = ""):
-	#if readTweens.any(func(tween:Tween): return tween.is_running()):
-		#for tw in readTweens: 
-			#tw.kill()
 	if readTween and readTween.is_running():
 		readTween.kill()
 		dialogBox.visible_ratio = 1
@@ -190,19 +186,20 @@ func create_choice_button(_line):
 func display_dialogline(dialogLine: String, _name:String = "", _bbtag:String = ""):
 	var gChData = GlobalData.characterDataDict
 	var curCharacterData : CharacterBaseResource
-	var realName = _name.format(GlobalData.data)
-	var bbname = realName
-	if !realName.is_empty():
-		if gChData.has(realName) && gChData[realName] is CharacterBaseResource:
-			curCharacterData = gChData[realName]
+	var bbname:String= _name
+	if !_name.is_empty():
+		if gChData.has(_name) && gChData[_name] is CharacterBaseResource:
+			curCharacterData = gChData[_name]
 			bbname = apply_font_setting(bbname, curCharacterData.nameFontSettings)
 		else : #use default if characterBaseResource is not found
 			bbname = apply_font_setting(bbname, settings.defaultNameSettings)
 		bbname = apply_bbcode(bbname+":","b")
-	
+	#format after applyBB, so if data returned a duplicate name, dont apply same bb color
+	#example: {player_name} = "John" is not the same "John" in predefined name
+	var realBBName = bbname.format(GlobalData.data) 
 	var realDialogLine = dialogLine.format(GlobalData.data)
 	#seperate the dialog line with stamps
-	var lineSections : PackedStringArray
+	var lineSections : PackedStringArray #WARNING may want refactor, using struct/2DArray
 	var speedList : Array[float] = [settings.readingSpeed]
 	var delayList : Array[float] = [0]
 	
@@ -212,39 +209,43 @@ func display_dialogline(dialogLine: String, _name:String = "", _bbtag:String = "
 		#while there is stamp in the current slice, loop splits line into 2 slices,
 		#slice0 only have one section, slice1 could contain other more than one section 
 		while stampRegex.search(curDialogSlice) != null: 
-			var curStamp = stampRegex.search(curDialogSlice)
+			var curStamp:RegExMatch = stampRegex.search(curDialogSlice)
 			var delay:float = curStamp.get_string("Delay").to_float() if curStamp.names.has("Delay") else 0
-			var speed:float = float(curStamp.get_string("Speed"))
+			var speed:float = settings.readingSpeed
+			for skey in ["Speed", "Speed2"]:
+				if curStamp.names.has(skey): speed = float(curStamp.get_string(skey))
+			
 			speedList.append(speed) #append speed
 			delayList.append(delay) #append delay
+			
 			slices = curDialogSlice.split(curStamp.get_string(),true)
 			lineSections.append(slices[0]) #append first slice
 			curDialogSlice = slices[1] #current slice becomes slice1
 		if slices.size() > 1: #after while loop, append the last slice
 			lineSections.append(slices[1]) 
 	else: lineSections.append(realDialogLine) #if no stamps, the whole line is a section
-	
-	#join line sections
+	#join line sections after removing stamps
 	realDialogLine = "".join(lineSections)
-	
-	var bbDialogLine = realDialogLine
+	var realBBDialogLine = realDialogLine
 	if _bbtag != "":
 		var bbtagChain = _bbtag.split(",")
 		for bb in bbtagChain:
 			var bbt = bbtagRegex.search(bb.strip_edges())
 			var tag = bbt.get_string("Tag")
 			var param = bbt.get_string("Param")
-			bbDialogLine = apply_bbcode(realDialogLine, tag, param)
+			realBBDialogLine = apply_bbcode(realDialogLine, tag, param)
 			
 	dialogBox.visible_characters = 0
-	var fullLine = (bbname+bbDialogLine)
+	var fullLine = realBBName + realBBDialogLine
 	dialogBox.text = fullLine
 	
 	#if previous tween is running, kill it, not nessasary, but just in case
 	if readTween and readTween.is_running(): readTween.kill()
 	readTween = create_tween() #only create once, or else it will override
 	readTween.set_trans(Tween.TRANS_LINEAR)
-	var startPosition = realName.length()+1 #plus the ":" count
+	#get length of real name here, so bbcode won't be included
+	var realNameLength = _name.format(GlobalData.data).length() 
+	var startPosition = realNameLength+1 #plus the ":" count
 	for i in range(0, lineSections.size()):
 		var sectionLength = lineSections[i].length()
 		var speed: float = speedList[i] #index 0 is default reading speed from settings 
@@ -253,38 +254,12 @@ func display_dialogline(dialogLine: String, _name:String = "", _bbtag:String = "
 		var delta :float = 0
 		if speed != 0: delta = destination/speed #if speed is 0, delta is 0, which should result in instant
 		var delay = delayList[i]
-		await readTween.chain().tween_interval(delay)
+		await readTween.chain().tween_interval(delay) #this will delay the tweener below
 		readTween.chain().tween_property(dialogBox,"visible_characters", destination, delta).from(startPosition)
 		startPosition = destination #this destination the next start position
-		
 		print(readTween.get_total_elapsed_time())
-		
 	print(str(currentLine) + ":" + get_line())
-	
-#func format_dialogline(formatArray : Array[String]):
-	#var dialogline = dialogBox.get_parsed_text()
-	#var newLine = dialogline.format(formatArray)
-	#dialogBox.text = newLine
-#func display_portrait(_name:String = "", _tone:String = ""):
-	#var gChData = Global_Data.characterDataDict
-	#var chData : CharacterBaseResource
-	#if gChData.has(_name):
-		#dialogPortrait.visible = true
-		#chData  = gChData[_name]
-		#var y = chData.atlasYpos
-		#var x = chData.get_tone_x_pos(_tone)
-		#var coords = Vector2i(x,y)
-		#var clampVec = Vector2i(dialogPortrait.hframes, dialogPortrait.vframes)
-		#dialogPortrait.frame_coords = coords.clamp(Vector2i(0,0), clampVec)
-	#else:
-		#dialogPortrait.visible = false
 
-	
-#func apply_color (_text:String, _color:String)->String:
-	#var beforeFormat = "%s"+_text+"%s"
-	#var afterFormat = beforeFormat%["[color={c}]","[/color]"]
-	#var result = afterFormat.format({"c":_color})
-	#return result
 func apply_font_setting(_text: String, _fontSetting: FontSettingsResource)->String:
 	var result = _text
 	result = apply_bbcode(result,"color" ,"="+_fontSetting.color.to_html())
