@@ -21,8 +21,10 @@ var flagRegex = RegEx.new()
 var bbtagRegex = RegEx.new()
 var stampRegex = RegEx.new()
 
-var lockScene : bool = false
 var readTween : Tween
+static var lockScene : bool = false
+static var timer : SceneTreeTimer
+var interactReady : bool = true
 func _ready():
 	commandCaptureRegex.compile(r'^(?<Button>>\s*)?(?:\((?<BoxA>[^\(\)]*)\))?(?<Line>.*?)\s*(?:\((?!.*\()(?<BoxB>[^\(\)]*)\))?$')
 	dialogCaptureRegex.compile(r'(?:^(?:(?<Name>.*):|)(?:(?<Dialog>.*?)))(\[(?!.*\[)(?<BBTag>.*)\]|)$')
@@ -40,10 +42,14 @@ func _ready():
 	signal_start_convo.connect(begin)
 	signal_play_next.connect(play_next_dialog)
 	signal_jump.connect(play_next_dialog)
-
 func _unhandled_input(_event: InputEvent) -> void:
-	if Input.is_action_just_pressed("Interact"):
+	var startCoolDown = func(duration : float):
+		interactReady = false
+		timer = get_tree().create_timer(duration, true, false, true)
+		timer.timeout.connect(func(): interactReady = true)
+	if Input.is_action_just_pressed("Interact") and interactReady:
 		play_next_dialog()
+		startCoolDown.call(0.1)
 
 func read_conversationFile(filename : String):
 	var f = FileAccess.open(filename, FileAccess.READ)
@@ -85,20 +91,22 @@ func play_next_dialog(_flagName : String = ""):
 	var boxB : String
 	var isChoice : bool = false
 	var boxAcondition : bool = false
+	var full : String
 	while currentLine <= currentConversation.size():
 		currentLine += 1
 		snapshot = capture_line(get_line())
 		isChoice = snapshot["isChoice"]
 		boxA = snapshot["boxA"]
 		boxB = snapshot["boxB"]
-		var full : String = snapshot["full"]
+		full = snapshot["full"]
 		boxAcondition = read_boxA_condition(boxA)
 		#if not a choice, and boxA is true, handle boxB input if line is empty, continue to next line
 		if isChoice: break #break if it's a choice, 
 		if not boxAcondition: continue #if box a is not true, continue
 		CmdListener.handle_input(boxB)#if not a choice, boxa is true and full is empty
-		if not full.is_empty(): break #if the "not choice" is not an empty dialog line, break, display line
-	if boxAcondition and not isChoice:
+		if not full.is_empty(): break #if the "not choice" is not an empty dialog line, break
+	print(str(currentLine) + ":" + get_line())
+	if boxAcondition and not isChoice and not full.is_empty():
 		display_dialogline(snapshot["dialog"], snapshot["name"], snapshot["bbtag"])
 		#display_portrait(currentCaptures["name"], currentCaptures["tone"])
 	#display buttons
@@ -123,9 +131,6 @@ func capture_line(_line:String = get_line())-> Dictionary:
 	var cmdMatch = commandCaptureRegex.search(_line)
 	var line = regEx_return.call(cmdMatch,"Line")#cmd.get_string("Line")
 	var	dialogLine = dialogCaptureRegex.search(line)
-	
-	const IS_CHOICE = "isChoice"
-	const BOX_A = "boxA"
 	
 	var isChoice = !cmdMatch.get_string("Button").is_empty()
 	var boxA = cmdMatch.get_string("BoxA")
@@ -173,10 +178,8 @@ func create_choice_button(_line):
 	var isDisabled = false
 	if boxAcondition == false:
 		match constructInstruction:
-			"hide:":
-				return
-			"disable:",_:
-				isDisabled = true
+			"hide:": return
+			"disable:",_: isDisabled = true
 	var choiceButt : Button = Button.new()
 	choiceButt.text = choiceText
 	buttonContainer.add_child(choiceButt)
@@ -257,8 +260,8 @@ func display_dialogline(dialogLine: String, _name:String = "", _bbtag:String = "
 		await readTween.chain().tween_interval(delay) #this will delay the tweener below
 		readTween.chain().tween_property(dialogBox,"visible_characters", destination, delta).from(startPosition)
 		startPosition = destination #this destination the next start position
-		print(readTween.get_total_elapsed_time())
-	print(str(currentLine) + ":" + get_line())
+		#print("StampElapsedTime: ",readTween.get_total_elapsed_time())
+	
 
 func apply_font_setting(_text: String, _fontSetting: FontSettingsResource)->String:
 	var result = _text

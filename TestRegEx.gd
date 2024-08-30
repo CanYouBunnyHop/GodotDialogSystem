@@ -4,7 +4,10 @@ extends Control
 #var dict = {
 	#ONE = func(stuff): print(stuff),
 #}
+@onready var interactCooldown = get_tree().create_timer(5, true, false, true)
 func _ready() -> void:
+	await interactCooldown.timeout
+	print("Timeout")
 #region Tween testing Region
 	#conver time taken to speed
 	#var xpos = [800, 900, 400]
@@ -37,8 +40,8 @@ func _ready() -> void:
 		#print(nres)
 	#else:
 		#print(n.get_error_text())
-	var s = "a     b".split(" ")
-	print(s)
+	#var s = "a     b".split(" ")
+	#print(s)
 	
 	#dict.ONE.call("i can say anything i want", 0)
 	#(func(): print("called")).call()

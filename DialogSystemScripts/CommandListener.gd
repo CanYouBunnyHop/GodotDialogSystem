@@ -6,23 +6,6 @@ var conditionPrefixRegex = RegEx.new()
 var statementWithTypeRegex = RegEx.new()
 var jumpRegex = RegEx.new()
 
-#enum OBJ_TYPE{ #(objectType & OBJ_TYPE.EXIST) != OBJ_TYPE.EXIST #example 1001 and 0001 = 0001
-	#NULL = 0,
-	#EXIST = 1,
-	#DAT = 2,
-	#INT = 4,
-	#BOOL = 8,
-	#STR = 16
-#}
-#var subjectDatExist = GlobalData.data.has(subjectInMatch)
-#var finalSubject = GlobalData.data[subjectInMatch] if subjectDatExist else null
-#var operation = inRegexMatch.get_string(KEY.OPERATION)
-#var objectExist : bool
-#var finalObject = null
-
-#"DatObj","IntObj","BoolObj","StrObj"
-#Subject, Op, Dat ,Int, Bool, Str
-
 var	debugConsoleEdit : LineEdit
 var debugConsoleLbl : RichTextLabel
 var commandList : Array[Command]
@@ -203,36 +186,8 @@ func read_condition(step:String)-> bool:
 			return false
 		else:
 			return comparisonResult
-		#if subjectType == TYPE_INT:
-			#match comparator:
-				#"==": #int, bool, string
-					#return subject == object
-				#"!=": #int, bool, string
-					#return subject != object
-				#"<":
-					#return subject < object
-				#"<=":
-					#return subject <= object
-				#">":
-					#return subject > object
-				#">=":
-					#return subject >= object
-				#_:
-					#push_error("ERROR: Invalid command comparator")
-					#debug_error("ERROR: Invalid command comparator")
-					#return false
-		#else: #not an interger
-			#match comparator:
-				#"==": #int, bool, string
-					#return subject == object
-				#"!=": #int, bool, string
-					#return subject != object
-				#_:
-					#push_error("ERROR: Invalid command comparator")
-					#debug_error("ERROR: Invalid command comparator")
-					#return false
-	finalResults.append(subConditionResult.call(subConditionA)) #return result if keyword dont exist
-	#var keyWord = subConditionA.get_string("Keyword")
+	finalResults.append(subConditionResult.call(subConditionA)) 
+	
 	match subConditionA.get_string("Keyword"):
 		"and":
 			var subConditionB = conditionWithTypeRegex.search(subConditionA.get_string("ConditionB"))
@@ -252,7 +207,7 @@ func read_condition(step:String)-> bool:
 				return true
 			else:
 				return false
-		_:
+		_: #return first result if keyword dont exist
 			return finalResults[0]
 func read_condition_container(_arg:String):
 	var allSteps = _arg.split(";",false)
@@ -283,7 +238,7 @@ func validate_command_chain(input:String):
 		var targetKey = assgnmntCmdExResult.subjectKey
 		var value = assgnmntCmdExResult.object
 		var operator = assgnmntCmdExResult.operation
-		GlobalData.set_data(targetKey, value, operator)#if data doesn't previously exist, it will create a new one
+		GlobalData.set_data(targetKey, value, operator)
 	if jumpCommand == null: return
 	jump_statement(jumpCommand.get_string("Flag"))
 func jump_statement(_flag : String = ""):
