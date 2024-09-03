@@ -1,0 +1,32 @@
+--1--
+This is A1
+Choose one option, This is A1
+	> jump to scene 2 (jump: FLAG=2)
+	> jump to scene 3 (jump: FLAG=3)
+	> jump to scene 4 (jump: FLAG=4)
+	> jump to conversation 2 (jump: ID=B)
+	> do nothing
+--2--
+This is A2
+Choose one option, This is A2
+	> jump to scene 2 (jump: FLAG=2)
+	> jump to scene 3 (jump: FLAG=3)
+	> jump to scene 4 (jump: FLAG=4)
+	> jump to conversation 2 (jump: ID=B)
+	> do nothing
+--3--
+This is A3 
+Choose one option, This is A3
+	> jump to scene 2 (jump: FLAG=2)
+	> jump to scene 3 (jump: FLAG=3)
+	> jump to scene 4 (jump: FLAG=4)
+	> jump to conversation 2 (jump: ID=B)
+	> do nothing
+--4--
+This is A4
+Choose one option, This is A4
+	> jump to scene 2 (jump: FLAG=2)
+	> jump to scene 3 (jump: FLAG=3)
+	> jump to scene 4 (jump: FLAG=4)
+	> jump to conversation 2 (jump: ID=B)
+	> do nothing

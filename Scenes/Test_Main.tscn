@@ -1,0 +1,82 @@
+[gd_scene load_steps=5 format=3 uid="uid://jyfomg62go7n"]
+
+[ext_resource type="Script" path="res://Scenes/ConversationManager.gd" id="1_7dhc1"]
+[ext_resource type="PackedScene" uid="uid://b2wuwiadupfke" path="res://Scenes/Dialog_System.tscn" id="2_7kyi4"]
+[ext_resource type="Script" path="res://Scenes/camTest.gd" id="3_j5am4"]
+[ext_resource type="Texture2D" uid="uid://bnxq5dre0llr6" path="res://icon.svg" id="4_axv4i"]
+
+[node name="ConversationManager" type="Node" node_paths=PackedStringArray("dialogSystems")]
+script = ExtResource("1_7dhc1")
+dialogSystems = [NodePath("DialogSystemA"), NodePath("DialogSystemB")]
+
+[node name="DialogSystemA" parent="." instance=ExtResource("2_7kyi4")]
+dialogSystemID = "A"
+file = "res://txt files/FlagTestA.txt"
+
+[node name="DialogSystemB" parent="." instance=ExtResource("2_7kyi4")]
+dialogSystemID = "B"
+file = "res://txt files/FlagTestB.txt"
+
+[node name="Camera2D" type="Camera2D" parent="."]
+anchor_mode = 0
+ignore_rotation = false
+script = ExtResource("3_j5am4")
+
+[node name="Test Ui" type="Node" parent="."]
+
+[node name="LineEdit" type="LineEdit" parent="Test Ui"]
+visible = false
+top_level = true
+anchors_preset = 10
+anchor_right = 1.0
+offset_left = 15.0
+offset_top = 15.0
+offset_right = -15.0
+offset_bottom = 46.0
+placeholder_text = "Enter Here"
+virtual_keyboard_type = 1
+clear_button_enabled = true
+
+[node name="RichTextLabel" type="RichTextLabel" parent="Test Ui/LineEdit"]
+visible = false
+layout_mode = 1
+anchors_preset = -1
+anchor_right = 1.0
+offset_left = 15.0
+offset_top = 32.0
+offset_right = -15.0
+offset_bottom = 200.0
+text = "STUFF
+STUFF
+STUFF
+STUFF
+STUFF
+STUFF"
+
+[node name="Label" type="Label" parent="Test Ui/LineEdit"]
+visible = false
+top_level = true
+layout_direction = 1
+layout_mode = 1
+anchors_preset = -1
+anchor_right = 1.0
+offset_left = 15.0
+offset_top = 60.0
+offset_right = -15.0
+text = "There is text here
+
+There is text here
+
+There is text here
+
+"
+
+[node name="CanvasGroup" type="CanvasGroup" parent="."]
+
+[node name="Icon" type="Sprite2D" parent="."]
+position = Vector2(381, 231)
+texture = ExtResource("4_axv4i")
+
+[node name="Icon2" type="Sprite2D" parent="."]
+position = Vector2(565, 402)
+texture = ExtResource("4_axv4i")

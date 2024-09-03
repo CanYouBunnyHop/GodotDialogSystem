@@ -2,9 +2,10 @@ class_name CommandListener extends Node
 var gdata : 
 	get: return GlobalData.data
 var conditionWithTypeRegex = RegEx.new()
-var conditionPrefixRegex = RegEx.new()
+var conditionPrefixRegex = RegEx.new() #TODO Use const dict instead
 var statementWithTypeRegex = RegEx.new()
 var jumpRegex = RegEx.new()
+#var endRegex = RegEx.new()
 
 var	debugConsoleEdit : LineEdit
 var debugConsoleLbl : RichTextLabel
@@ -37,10 +38,11 @@ func _ready():
 		#validate_command_chain),
 		Command.new("print:","","",func(_in : String):print("success")),
 		]
-	conditionPrefixRegex.compile(r'^(if:|elif:|else:)')
+	conditionPrefixRegex.compile(r'^(if:|elif:|else:)') #TODO use const dict
 	conditionWithTypeRegex.compile(r'(?<Condition>(?:%(?<Subject>\w+))\s+(?<Op>==|!=|<|<=|>|>=)\s+(?:(?:%(?<DatObj>\w+))|(?<IntObj>\d+)|(?<BoolObj>true|false)|(?:"(?<StrObj>.*?)")))(?:\s+(?<hasKW>and|or))?(?(hasKW)(?<ConditionB>\s+(?&Condition)))')
 	statementWithTypeRegex.compile(r'then:\s*(?:%(?<Subject>\w+))\s+(?<Op>[^= ]*=)\s*(?:%(?<DatObj>\w+)|(?<IntObj>\d+)|(?<BoolObj>true|false)|(?:"(?<StrObj>.*?)"))')
-	jumpRegex.compile(r'jump:\s*(?<Flag>\w+\s*?)')
+	jumpRegex.compile(r'jump:\s*(ID=\s*(?<DSID>\w+))?\s*(FLAG=\s*(?<Flag>\w+))?')
+	#endRegex.compile(r'end:\s+(?<DSKey>\w+)?(?(DSKey)\s+(?<Flag>\w+))?')
 	var createDebugConsole = func():
 		debugConsoleEdit = LineEdit.new()
 		debugConsoleEdit.top_level = true
@@ -160,7 +162,7 @@ func get_expression_regex_returns(inRegexMatch : RegExMatch)-> CmdExpressionResu
 func read_condition(step:String)-> bool:
 	var subConditionA = conditionWithTypeRegex.search(step)#conditionRegex.search(step)
 	if subConditionA == null:
-		debug_error("INVALID CONDITION: "+step)
+		debug_error("CONDITION NOT FOUND: "+step)
 		return false
 	var finalResults : Array = []
 	var subConditionResult = func(condition : RegExMatch) -> bool:
@@ -186,8 +188,7 @@ func read_condition(step:String)-> bool:
 			return false
 		else:
 			return comparisonResult
-	finalResults.append(subConditionResult.call(subConditionA)) 
-	
+	finalResults.append(subConditionResult.call(subConditionA))
 	match subConditionA.get_string("Keyword"):
 		"and":
 			var subConditionB = conditionWithTypeRegex.search(subConditionA.get_string("ConditionB"))
@@ -224,7 +225,7 @@ func read_condition_container(_arg:String):
 				break
 			else:
 				continue
-		elif prefix == "else:": #prefix is else
+		elif prefix == "else:":
 			CmdListener.handle_input(step)
 			break
 		else:
@@ -232,6 +233,7 @@ func read_condition_container(_arg:String):
 func validate_command_chain(input:String):
 	var thenCommands : Array[RegExMatch] = statementWithTypeRegex.search_all(input)
 	var jumpCommand : RegExMatch = jumpRegex.search(input)
+	#var endCommand : RegExMatch
 	#split out then: and jump: command
 	for tcmd in thenCommands:
 		var assgnmntCmdExResult : CmdExpressionResult = get_expression_regex_returns(tcmd)
@@ -240,6 +242,9 @@ func validate_command_chain(input:String):
 		var operator = assgnmntCmdExResult.operation
 		GlobalData.set_data(targetKey, value, operator)
 	if jumpCommand == null: return
-	jump_statement(jumpCommand.get_string("Flag"))
+	if jumpCommand.names.has("DSID"):
+		GlobalData.set_current_dialog_system(jumpCommand.get_string("DSID"))
+	if jumpCommand.names.has("Flag"):
+		jump_statement(jumpCommand.get_string("Flag"))
 func jump_statement(_flag : String = ""):
 	GlobalData.currentDialogSystem.signal_play_next.emit(_flag)

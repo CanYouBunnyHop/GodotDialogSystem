@@ -1,10 +1,11 @@
 class_name DialogSystemGlobalData extends Node
 var data : Dictionary = {"a":false,"b":10,"name":"Nick"}
 var characterDataDict : Dictionary
-var dialogSystemCollection : Dictionary
+var dialogSystemDict : Dictionary
 var currentDialogSystem : DialogSystem
-#for avoiding typos, when adding a custom operator, 
+#for avoiding typos, when adding a custom operator,
 #spaces aren't allowed, and suffix it with "="
+#BUG auto-complete when defining dictionary is not working
 const op = {
 	EQUALS = "=",
 	NOT_EQUAL = "!=",
@@ -36,8 +37,10 @@ const validOpDict = {
 	TYPE_BOOL : ["=", "!="],
 	TYPE_STRING : ["=","+=", op.PREFIX, op.SUFFIX, op.PREFFIX_, op._SUFFIX],
 }
-#not using expression due to it not supporting assignment, 
-#also may have too many potential unique cases to really be clean
+var timer : SceneTreeTimer
+var interactReady : bool = true
+#NOTE not using expression due to it 
+#not supporting assignment and too restrictive
 var assignmentCallableDict : Dictionary = {
 	op.EQUALS : func(target, value): return value,
 	op.NOT_EQUAL : func(target, value): return !value,
@@ -55,6 +58,31 @@ var assignmentCallableDict : Dictionary = {
 	op.PREFFIX_ : func(target, value): return value+" "+target,
 	op._SUFFIX : func(target, value): return target+" "+value,
 }
+func set_current_dialog_system(ID:String):
+	if dialogSystemDict.has(ID): 
+		currentDialogSystem.visible = false
+		currentDialogSystem = dialogSystemDict[ID]
+		currentDialogSystem.visible = true
+		currentDialogSystem.interacted()
+	else: CmdListener.debug_error("Invalid dialog system ID: %s"%[ID])
+	
+func _unhandled_input(_event: InputEvent) -> void:
+	var startCoolDown = func(duration : float):
+		interactReady = false
+		timer = get_tree().create_timer(duration, true, false, true)
+		timer.timeout.connect(func(): interactReady = true)
+	if Input.is_action_just_pressed("Interact") and interactReady:
+		if currentDialogSystem == null: return #return if no dialog system is active
+		currentDialogSystem.interacted()
+		#cooldown prevent accidental skipping when spamming Interact
+		startCoolDown.call(0.1)
+
+#func _ready() -> void:
+	#var allDS:Array = dialogSystemDict.values()
+	#for ds in allDS: ds.visible = false
+	#currentDialogSystem.visible = true
+	
+#TBD may want to move this into set_data()
 func get_data(key : String, type: Variant.Type):
 	var validTypes = validTypesDict.keys()
 	#will override and create new var if type dont match
@@ -79,8 +107,8 @@ func set_data(targetKey : String, value, operator:String):
 		var msg="SET DATA FAILED, INVALID OPERATOR: %s /n %s operators are"%[operator,", ".join(ops)]
 		CmdListener.debug_error(msg)
 		return	
-	# get data makes sure target/subject exist,
-	# by creating a default value based on type, then assinging to key
+	#get data makes sure target/subject exist,
+	#by creating a default value based on type, then assinging to key
 	var target = get_data(targetKey, valType)
 	var assignmentCallable : Callable = assignmentCallableDict[operator]
 	var finalValue = assignmentCallable.call(target, value)

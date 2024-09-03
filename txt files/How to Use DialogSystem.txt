@@ -108,8 +108,8 @@ for numbers, only int are currently supported, when dividing, decimal places are
 then dividing by 0
 
 jump command
-<jump:> <flag>
-jump to the specified flag, if flag is not found, the command is ignored
+<jump:> <flag|-> <DialogSystemID>
+jump to the specified flag, "-"
 flag "beginning" will return to the beginning of the conversation, 
 unless it is overidden
 
