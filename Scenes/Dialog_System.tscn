@@ -4,8 +4,9 @@
 [ext_resource type="PackedScene" uid="uid://6mxcaa0tr1by" path="res://Scenes/speech_box.tscn" id="5_5mqlt"]
 
 [node name="DialogSystem" type="CanvasLayer" node_paths=PackedStringArray("speechBox")]
+follow_viewport_scale = 0.0
 script = ExtResource("1_rtt8w")
-file = "res://txt files/Conversation.txt"
+filePath = "res://txt files/Conversation.txt"
 speechBox = NodePath("Speech Box")
 
 [node name="Speech Box" parent="." instance=ExtResource("5_5mqlt")]

@@ -17,8 +17,9 @@ config/icon="res://icon.svg"
 
 [autoload]
 
-GlobalData="*res://DialogSystemGlobalData.gd"
+GlobalData="*res://DialogSystemScripts/DialogSystemGlobalData.gd"
 CmdListener="*res://DialogSystemScripts/CommandListener.gd"
+Console="*res://DialogSystemScripts/DebugConsole.gd"
 
 [editor]
 

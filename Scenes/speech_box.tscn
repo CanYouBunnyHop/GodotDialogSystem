@@ -1,7 +1,7 @@
 [gd_scene load_steps=8 format=3 uid="uid://6mxcaa0tr1by"]
 
-[ext_resource type="Script" path="res://SpeechBox.gd" id="1_fsqis"]
-[ext_resource type="Script" path="res://SpeechBoxSettings.gd" id="2_insbe"]
+[ext_resource type="Script" path="res://DialogSystemScripts/SpeechBox.gd" id="1_fsqis"]
+[ext_resource type="Script" path="res://DialogSystemScripts/SpeechBoxSettings.gd" id="2_insbe"]
 [ext_resource type="Texture2D" uid="uid://c0fdqpws140qe" path="res://testPortrait.png" id="3_oh0vi"]
 [ext_resource type="Script" path="res://CustomBBTags/CustomBBTag_ghost.gd" id="4_08rj3"]
 [ext_resource type="Script" path="res://CustomBBTags/CustomBBTag_matrix.gd" id="5_dqwa4"]

@@ -10,17 +10,17 @@ script = ExtResource("1_7dhc1")
 dialogSystems = [NodePath("DialogSystemA"), NodePath("DialogSystemB")]
 
 [node name="DialogSystem_Stamp" parent="." instance=ExtResource("2_7kyi4")]
+visible = false
 dialogSystemID = "Stamp"
 
 [node name="DialogSystemA" parent="." instance=ExtResource("2_7kyi4")]
-visible = false
 dialogSystemID = "A"
-file = "res://txt files/FlagTestA.txt"
+filePath = "res://txt files/FlagTestA.txt"
 
 [node name="DialogSystemB" parent="." instance=ExtResource("2_7kyi4")]
 visible = false
 dialogSystemID = "B"
-file = "res://txt files/FlagTestB.txt"
+filePath = "res://txt files/FlagTestB.txt"
 
 [node name="Camera2D" type="Camera2D" parent="."]
 anchor_mode = 0

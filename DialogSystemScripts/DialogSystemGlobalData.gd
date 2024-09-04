@@ -50,10 +50,10 @@ var assignmentCallableDict : Dictionary = {
 	op.MULT : func(target, value): return target * value,
 	op.DIV : func(target, value): 
 		if value != 0: return target / value
-		else: CmdListener.debug_warn("tried to divide/ by 0"),
+		else: Console.debug_warn("tried to divide/ by 0"),
 	op.REMAINDER : func(target, value): 
 		if value != 0: return target % 0
-		else: CmdListener.debug_warn("tried to divide% by 0"),
+		else: Console.debug_warn("tried to divide% by 0"),
 	op.PREFIX : func(target, value): return value + target,
 	op.SUFFIX : func(target, value): return target + value,
 	op.PREFFIX_ : func(target, value): return value+" "+target,
@@ -69,7 +69,7 @@ func set_current_dialog_system(ID:String):
 		#currentDialogSystem = dialogSystemDict[ID]
 		#currentDialogSystem.visible = true
 		#currentDialogSystem.interacted()
-	else: CmdListener.debug_error("Invalid dialog system ID: %s"%[ID])
+	else: Console.debug_error("Invalid dialog system ID: %s"%[ID])
 	
 #func _unhandled_input(_event: InputEvent) -> void:
 	#var startCoolDown = func(duration : float):
@@ -95,7 +95,7 @@ func get_data(key : String, type: Variant.Type):
 	if !data.has(key) or typeof(data[key]) != type: 
 		data[key] = validTypeDefault[type]
 		var msg = "data[{0}] = {1} Type:{2}, has either been created or overriden"
-		CmdListener.debug_warn(msg.format([key, data[key], validTypesDict[type]]))
+		Console.debug_warn(msg.format([key, data[key], validTypesDict[type]]))
 	return data[key]
 func set_data(targetKey : String, value, operator:String):
 	var validTypes = validTypesDict.keys()
@@ -104,13 +104,13 @@ func set_data(targetKey : String, value, operator:String):
 	if not validTypes.any(func(t): return valType==t):
 		var vts:= PackedStringArray(validTypesDict.values())
 		var msg:String = "CANNOT SET DATA TO AN INVALID TYPE. VALID TYPES: " + ", ".join(vts)
-		CmdListener.debug_error(msg)
+		Console.debug_error(msg)
 		return
 	#if operator is not an accepted type
 	if not validOpDict[valType].any(func(assOp): return operator==assOp):
 		var ops:= PackedStringArray(validOpDict[valType])
 		var msg="SET DATA FAILED, INVALID OPERATOR: %s /n %s operators are"%[operator,", ".join(ops)]
-		CmdListener.debug_error(msg)
+		Console.debug_error(msg)
 		return	
 	#get data makes sure target/subject exist,
 	#by creating a default value based on type, then assinging to key
