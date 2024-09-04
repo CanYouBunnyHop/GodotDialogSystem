@@ -70,7 +70,10 @@ func set_current_dialog_system(ID:String):
 		#currentDialogSystem.visible = true
 		#currentDialogSystem.interacted()
 	else: Console.debug_error("Invalid dialog system ID: %s"%[ID])
-	
+
+#NOTE moved back to dialogSystem, 
+#maybe you want to have multiple active system?
+
 #func _unhandled_input(_event: InputEvent) -> void:
 	#var startCoolDown = func(duration : float):
 		#interactReady = false

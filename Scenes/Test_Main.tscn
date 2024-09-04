@@ -10,7 +10,6 @@ script = ExtResource("1_7dhc1")
 dialogSystems = [NodePath("DialogSystemA"), NodePath("DialogSystemB")]
 
 [node name="DialogSystem_Stamp" parent="." instance=ExtResource("2_7kyi4")]
-visible = false
 dialogSystemID = "Stamp"
 
 [node name="DialogSystemA" parent="." instance=ExtResource("2_7kyi4")]

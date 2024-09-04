@@ -3,7 +3,7 @@ class_name DialogSystem extends CanvasLayer
 # CanvasLayer.follow_viewport_enabled = true, means it wont follow camera
 # CanvasLayer.follow_viewport_enabled = false, means it is overlay for camera
 
-var currentLine :int = -1
+var currentLineIndex :int = -1
 var flagDict : Dictionary = {"beginning": 0}
 var currentConversation : Array[String] = []
 
@@ -34,8 +34,9 @@ var isActive : bool = false
 #var lockDialogBox : bool = false #NOTE when locked, dialog won't be updated, used for button prompt
 var timer:SceneTreeTimer
 var interactReady:bool = true
+var curDisplayedLine : LineCapture 
 func get_system_info()->String:
-	return "DialogSystemID:{0}, readableLines = {1}\ncurrentLineNumber = {2}".format([dialogSystemID, currentConversation.size(), currentLine])
+	return "DialogSystemID:{0}, readableLines = {1}\ncurrentLineNumber = {2}".format([dialogSystemID, currentConversation.size(), currentLineIndex])
 func _ready():
 	#NOTE Try adding self to globaldata dialog system dict using defined ID or Instance ID
 	if dialogSystemID.is_empty() or dialogSystemID == null:
@@ -44,7 +45,7 @@ func _ready():
 	GlobalData.dialogSystemDict[dialogSystemID] = self
 	read_conversationFile(filePath)
 	var begin = func():
-		currentLine = -1
+		currentLineIndex = -1
 		play_next_dialog()
 	signal_start_convo.connect(begin)
 	signal_jump.connect(play_next_dialog) #this signal requires flag as argument
@@ -62,7 +63,10 @@ func _unhandled_input(_event: InputEvent) -> void:
 		timer.timeout.connect(func(): interactReady = true)
 	if Input.is_action_just_pressed("Interact") and interactReady:
 		interacted()
-		#cooldown prevent accidental skipping when spamming Interact
+		startCoolDown.call(0.1) #prevent accidental skipping when spamming Interact
+	#TESTING Read again
+	if Input.is_key_pressed(KEY_B) and interactReady:
+		read_again()
 		startCoolDown.call(0.1)
 func read_conversationFile(_filePath : String):
 	var f = FileAccess.open(_filePath, FileAccess.READ)
@@ -83,12 +87,25 @@ func read_conversationFile(_filePath : String):
 			continue
 		currentConversation.append(line)
 func get_line(_n = 0)->String:
-	var nline = currentLine + _n
+	var nline = currentLineIndex + _n
 	if nline >= currentConversation.size(): #if index is over total dialogline array size
 		return ""
 	else :
 		var line = currentConversation[nline]
 		return line.strip_edges()
+
+func read_again(): #TESTING
+	if not isActive: return
+	if signal_dequeue_cmd.get_connections().size() > 0:
+		signal_dequeue_cmd.emit() #emit commands queued up in this signal
+		return
+	#if still reading, stop reading, show full text instead
+	if speechBox.readTween and speechBox.readTween.is_running():
+		speechBox.readTween.kill()
+		speechBox.dialogLabel.visible_ratio = 1
+		return
+	if speechBox.lockBox: return #if choices appeared, next dialog won't be updated
+	play_current_dialog()
 func interacted(): #TODO RENAME
 	if not isActive: return
 	if signal_dequeue_cmd.get_connections().size() > 0:
@@ -103,32 +120,43 @@ func interacted(): #TODO RENAME
 	play_next_dialog()
 func play_next_dialog(_flagName : String = ""):
 	if _flagName != "": #if flag exist, go to flag
-		currentLine = flagDict[_flagName] - 1
+		currentLineIndex = flagDict[_flagName] - 1 #minus one here because while loop adds one first
 	#if the conversation is over, returns
-	if currentLine >= currentConversation.size()-1: 
+	if currentLineIndex >= currentConversation.size()-1: 
 		Console.debug_log("end conversation")
 		return
-	var snapshot : LineCapture
-	while currentLine <= currentConversation.size():
-		currentLine += 1
-		snapshot = LineCapture.new(get_line())
+	#var snapshot : LineCapture 
+	while currentLineIndex <= currentConversation.size():
+		currentLineIndex += 1
+		curDisplayedLine = LineCapture.new(get_line())
 		#if not a choice, and boxA is true, handle boxB input if line is empty, continue to next line
-		if snapshot.isChoice: break #break if it's a choice, 
-		if not snapshot.boxACon: continue #if box a is not true, continue
-		CmdListener.handle_input(snapshot.boxB)#if not a choice, boxa is true and full is empty
-		if not snapshot.full.is_empty(): break #if the "not choice" is not an empty dialog line, break
-	print(str(currentLine) + ":" + get_line()) #TEST
-	if snapshot.boxACon and not snapshot.isChoice and not snapshot.full.is_empty():
-		speechBox.display_dialogline(snapshot.dialog, snapshot.name, snapshot.bbtag)
+		if curDisplayedLine.isChoice: break #break if it's a choice, 
+		if not curDisplayedLine.boxACon: continue #if box a is not true, continue
+		CmdListener.handle_input(curDisplayedLine.boxB)#if not a choice, boxa is true and full is empty
+		if not curDisplayedLine.full.is_empty(): break #if the "not choice" is not an empty dialog line, break
+	
+	print(str(currentLineIndex) + ":" + get_line()) #TEST
+	
+	#NOTE moved the choice check, condition, empty check in play_cur
+	play_current_dialog()
 	#display buttons, while currentline is a choice, loops
 	while LineCapture.new(get_line()).isChoice:#capture_line(get_line())["isChoice"]:
 		#probably not needed, but just in case 
-		if currentLine > currentConversation.size(): break
+		if currentLineIndex > currentConversation.size(): break
 		speechBox.create_choice_button(get_line()) #create button 
 		var nextline = get_line(1)
 		#if next line is not a choice, break the loop
 		if not LineCapture.new(nextline).isChoice: break#capture_line(nextline)["isChoice"]: break
-		currentLine += 1
-		print(str(currentLine) + ":" + get_line()) #TEST
+		currentLineIndex += 1
+		print(str(currentLineIndex) + ":" + get_line()) #TEST
+func play_current_dialog():
+	#currentDisplayedLine is null, means the system has never been interacted, 
+	#play next = play current, return
+	if curDisplayedLine == null: 
+		play_next_dialog()
+		return
+	if curDisplayedLine.boxACon and not curDisplayedLine.isChoice and not curDisplayedLine.full.is_empty():
+		speechBox.display_dialogline(curDisplayedLine.dialog, curDisplayedLine.name, curDisplayedLine.bbtag)
+	pass
 #func end_conversation():
 	#pass
