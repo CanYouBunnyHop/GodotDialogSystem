@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="CharacterBaseResource" load_steps=6 format=3 uid="uid://c5pqkgtxdl3sn"]
+
+[ext_resource type="Texture2D" uid="uid://c0fdqpws140qe" path="res://testPortrait.png" id="1_uvaox"]
+[ext_resource type="Script" path="res://DialogSystemScripts/Base Resources/FontSettingsResource.gd" id="2_30evk"]
+[ext_resource type="Script" path="res://DialogSystemScripts/Base Resources/CharacterBaseResource.gd" id="3_gwttx"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_l5c5y"]
+atlas = ExtResource("1_uvaox")
+
+[sub_resource type="Resource" id="Resource_1ms3f"]
+script = ExtResource("2_30evk")
+color = Color(0.886651, 0.223014, 0.36322, 1)
+outlineColor = Color(0, 0, 0, 1)
+outlineSize = 3
+
+[resource]
+resource_name = "Red"
+script = ExtResource("3_gwttx")
+name_ = "Red"
+atlas = SubResource("AtlasTexture_l5c5y")
+nameFontSettings = SubResource("Resource_1ms3f")

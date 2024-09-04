@@ -1,13 +1,15 @@
 extends Control
 #const dict = {ONE = "ass", TWO = 2}
-#var reg = RegEx.new()
+var reg = RegEx.new()
 #var dict = {
 	#ONE = func(stuff): print(stuff),
 #}
 @onready var interactCooldown = get_tree().create_timer(5, true, false, true)
 func _ready() -> void:
-	await interactCooldown.timeout
-	print("Timeout")
+	var t = reg.is_valid()
+	print(t)
+	#await interactCooldown.timeout
+	#print("Timeout")
 #region Tween testing Region
 	#conver time taken to speed
 	#var xpos = [800, 900, 400]

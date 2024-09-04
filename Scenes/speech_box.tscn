@@ -1,0 +1,81 @@
+[gd_scene load_steps=8 format=3 uid="uid://6mxcaa0tr1by"]
+
+[ext_resource type="Script" path="res://SpeechBox.gd" id="1_fsqis"]
+[ext_resource type="Script" path="res://SpeechBoxSettings.gd" id="2_insbe"]
+[ext_resource type="Texture2D" uid="uid://c0fdqpws140qe" path="res://testPortrait.png" id="3_oh0vi"]
+[ext_resource type="Script" path="res://CustomBBTags/CustomBBTag_ghost.gd" id="4_08rj3"]
+[ext_resource type="Script" path="res://CustomBBTags/CustomBBTag_matrix.gd" id="5_dqwa4"]
+
+[sub_resource type="RichTextEffect" id="RichTextEffect_pwlq5"]
+script = ExtResource("4_08rj3")
+
+[sub_resource type="RichTextEffect" id="RichTextEffect_dhnip"]
+script = ExtResource("5_dqwa4")
+
+[node name="Speech Box" type="Panel" node_paths=PackedStringArray("dialogLabel", "dialogPortrait", "buttonContainer", "settings")]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = 520.0
+mouse_filter = 1
+script = ExtResource("1_fsqis")
+dialogLabel = NodePath("Dialog Label")
+dialogPortrait = NodePath("Dialog Portrait")
+buttonContainer = NodePath("Button Container")
+settings = NodePath("SpeechBoxSettings")
+
+[node name="SpeechBoxSettings" type="Node" parent="." node_paths=PackedStringArray("speechBox")]
+script = ExtResource("2_insbe")
+speechBox = NodePath("..")
+
+[node name="Dialog Portrait" type="Sprite2D" parent="."]
+visible = false
+position = Vector2(69, 61)
+scale = Vector2(3.09375, 2.79719)
+texture = ExtResource("3_oh0vi")
+hframes = 7
+vframes = 4
+frame = 22
+
+[node name="Dialog Label" type="RichTextLabel" parent="."]
+layout_mode = 1
+anchors_preset = -1
+anchor_right = 1.0
+offset_left = 150.0
+offset_top = 13.0
+offset_right = -150.0
+offset_bottom = 105.0
+mouse_filter = 1
+theme_override_colors/default_color = Color(1, 1, 1, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 1
+theme_override_constants/shadow_offset_y = 0
+theme_override_constants/shadow_offset_x = 0
+bbcode_enabled = true
+text = "[rs speed=25]standard reading speed can be very slow, this is quite a long line of text[/rs][rs speed=1000 delay=3], this part will be significantly faster[/rs]"
+scroll_active = false
+shortcut_keys_enabled = false
+custom_effects = [SubResource("RichTextEffect_pwlq5"), SubResource("RichTextEffect_dhnip")]
+
+[node name="Button Container" type="VBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -375.0
+offset_top = -300.0
+offset_right = 375.0
+grow_horizontal = 2
+grow_vertical = 0
+alignment = 1
+
+[node name="Button" type="Button" parent="Button Container"]
+visible = false
+layout_mode = 2
+text = "A"
+
+[node name="Button2" type="Button" parent="Button Container"]
+visible = false
+layout_mode = 2
+text = "A"

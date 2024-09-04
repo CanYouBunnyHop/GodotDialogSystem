@@ -2,6 +2,7 @@ class_name DialogSystemGlobalData extends Node
 var data : Dictionary = {"a":false,"b":10,"name":"Nick"}
 var characterDataDict : Dictionary
 var dialogSystemDict : Dictionary
+
 var currentDialogSystem : DialogSystem
 #for avoiding typos, when adding a custom operator,
 #spaces aren't allowed, and suffix it with "="
@@ -42,8 +43,8 @@ var interactReady : bool = true
 #NOTE not using expression due to it 
 #not supporting assignment and too restrictive
 var assignmentCallableDict : Dictionary = {
-	op.EQUALS : func(target, value): return value,
-	op.NOT_EQUAL : func(target, value): return !value,
+	op.EQUALS : func(_target, value): return value,
+	op.NOT_EQUAL : func(_target, value): return !value,
 	op.PLUS : func(target, value): return target + value,
 	op.MINUS : func(target, value): return target - value,
 	op.MULT : func(target, value): return target * value,
@@ -59,23 +60,27 @@ var assignmentCallableDict : Dictionary = {
 	op._SUFFIX : func(target, value): return target+" "+value,
 }
 func set_current_dialog_system(ID:String):
-	if dialogSystemDict.has(ID): 
-		currentDialogSystem.visible = false
-		currentDialogSystem = dialogSystemDict[ID]
-		currentDialogSystem.visible = true
-		currentDialogSystem.interacted()
+	DialogSystem.signal_all_set_active.emit(false)
+	if dialogSystemDict.has(ID):
+		var activeDS:DialogSystem = dialogSystemDict[ID]
+		activeDS.isActive = true
+		currentDialogSystem = activeDS 
+		#currentDialogSystem.visible = false
+		#currentDialogSystem = dialogSystemDict[ID]
+		#currentDialogSystem.visible = true
+		#currentDialogSystem.interacted()
 	else: CmdListener.debug_error("Invalid dialog system ID: %s"%[ID])
 	
-func _unhandled_input(_event: InputEvent) -> void:
-	var startCoolDown = func(duration : float):
-		interactReady = false
-		timer = get_tree().create_timer(duration, true, false, true)
-		timer.timeout.connect(func(): interactReady = true)
-	if Input.is_action_just_pressed("Interact") and interactReady:
-		if currentDialogSystem == null: return #return if no dialog system is active
-		currentDialogSystem.interacted()
-		#cooldown prevent accidental skipping when spamming Interact
-		startCoolDown.call(0.1)
+#func _unhandled_input(_event: InputEvent) -> void:
+	#var startCoolDown = func(duration : float):
+		#interactReady = false
+		#timer = get_tree().create_timer(duration, true, false, true)
+		#timer.timeout.connect(func(): interactReady = true)
+	#if Input.is_action_just_pressed("Interact") and interactReady:
+		#if currentDialogSystem == null: return #return if no dialog system is active
+		#currentDialogSystem.interacted()
+		##cooldown prevent accidental skipping when spamming Interact
+		#startCoolDown.call(0.1)
 
 #func _ready() -> void:
 	#var allDS:Array = dialogSystemDict.values()
@@ -84,7 +89,7 @@ func _unhandled_input(_event: InputEvent) -> void:
 	
 #TBD may want to move this into set_data()
 func get_data(key : String, type: Variant.Type):
-	var validTypes = validTypesDict.keys()
+	#var validTypes = validTypesDict.keys()
 	#will override and create new var if type dont match
 	#if dont have key, or has key but type differs
 	if !data.has(key) or typeof(data[key]) != type: 
@@ -102,7 +107,7 @@ func set_data(targetKey : String, value, operator:String):
 		CmdListener.debug_error(msg)
 		return
 	#if operator is not an accepted type
-	if not validOpDict[valType].any(func(op): return operator==op):
+	if not validOpDict[valType].any(func(assOp): return operator==assOp):
 		var ops:= PackedStringArray(validOpDict[valType])
 		var msg="SET DATA FAILED, INVALID OPERATOR: %s /n %s operators are"%[operator,", ".join(ops)]
 		CmdListener.debug_error(msg)

@@ -175,7 +175,7 @@ func read_condition(step:String)-> bool:
 		if not comCmdExResult.objectExist or not comCmdExResult.subjectExist: return false
 		var subject = comCmdExResult.subject
 		var object = comCmdExResult.object
-		var subjectType = typeof(subject)
+		#var subjectType = typeof(subject)
 		var comparator = comCmdExResult.operation
 		
 		var comparison := Expression.new()
@@ -247,4 +247,4 @@ func validate_command_chain(input:String):
 	if jumpCommand.names.has("Flag"):
 		jump_statement(jumpCommand.get_string("Flag"))
 func jump_statement(_flag : String = ""):
-	GlobalData.currentDialogSystem.signal_play_next.emit(_flag)
+	GlobalData.currentDialogSystem.signal_jump.emit(_flag)

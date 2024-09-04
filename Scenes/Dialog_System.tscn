@@ -1,90 +1,11 @@
-[gd_scene load_steps=10 format=3 uid="uid://b2wuwiadupfke"]
+[gd_scene load_steps=3 format=3 uid="uid://b2wuwiadupfke"]
 
 [ext_resource type="Script" path="res://DialogSystemScripts/DialogSystem.gd" id="1_rtt8w"]
-[ext_resource type="Script" path="res://DialogSystemSettings.gd" id="2_w80hb"]
-[ext_resource type="Script" path="res://DialogSystemScripts/Base Resources/CharacterBaseResource.gd" id="3_rljsg"]
-[ext_resource type="Resource" uid="uid://c5pqkgtxdl3sn" path="res://DialogSystemScripts/Character Resources/Red.tres" id="4_fe2ak"]
-[ext_resource type="Texture2D" uid="uid://c0fdqpws140qe" path="res://testPortrait.png" id="5_s3fip"]
-[ext_resource type="Script" path="res://CustomBBTags/CustomBBTag_ghost.gd" id="6_aqjfh"]
-[ext_resource type="Script" path="res://CustomBBTags/CustomBBTag_matrix.gd" id="7_2yhb0"]
+[ext_resource type="PackedScene" uid="uid://6mxcaa0tr1by" path="res://Scenes/speech_box.tscn" id="5_5mqlt"]
 
-[sub_resource type="RichTextEffect" id="RichTextEffect_pwlq5"]
-script = ExtResource("6_aqjfh")
-
-[sub_resource type="RichTextEffect" id="RichTextEffect_dhnip"]
-script = ExtResource("7_2yhb0")
-
-[node name="DialogSystem" type="CanvasLayer" node_paths=PackedStringArray("buttonContainer", "dialogBox", "dialogPortrait", "settings")]
+[node name="DialogSystem" type="CanvasLayer" node_paths=PackedStringArray("speechBox")]
 script = ExtResource("1_rtt8w")
 file = "res://txt files/Conversation.txt"
-buttonContainer = NodePath("Button Container")
-dialogBox = NodePath("Panel/RichTextLabel")
-dialogPortrait = NodePath("Panel/DialogPortrait")
-settings = NodePath("DialogSystemSettings")
+speechBox = NodePath("Speech Box")
 
-[node name="DialogSystemSettings" type="Node" parent="." node_paths=PackedStringArray("dialogBox")]
-script = ExtResource("2_w80hb")
-dialogBox = NodePath("../Panel/RichTextLabel")
-chResources = Array[ExtResource("3_rljsg")]([ExtResource("4_fe2ak")])
-readingSpeed = 20.0
-useOverrideNameColor = null
-
-[node name="Panel" type="Panel" parent="."]
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-offset_top = 520.0
-mouse_filter = 1
-
-[node name="DialogPortrait" type="Sprite2D" parent="Panel"]
-position = Vector2(69, 61)
-scale = Vector2(3.09375, 2.79719)
-texture = ExtResource("5_s3fip")
-hframes = 7
-vframes = 4
-frame = 22
-
-[node name="RichTextLabel" type="RichTextLabel" parent="Panel"]
-layout_mode = 1
-anchors_preset = -1
-anchor_right = 1.0
-offset_left = 150.0
-offset_top = 13.0
-offset_right = -150.0
-offset_bottom = 105.0
-mouse_filter = 1
-theme_override_colors/default_color = Color(1, 1, 1, 1)
-theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
-theme_override_colors/font_shadow_color = Color(0, 0, 0, 1)
-theme_override_constants/outline_size = 1
-theme_override_constants/shadow_offset_y = 0
-theme_override_constants/shadow_offset_x = 0
-bbcode_enabled = true
-text = "[rs speed=25]standard reading speed can be very slow, this is quite a long line of text[/rs][rs speed=1000 delay=3], this part will be significantly faster[/rs]"
-scroll_active = false
-shortcut_keys_enabled = false
-custom_effects = [SubResource("RichTextEffect_pwlq5"), SubResource("RichTextEffect_dhnip")]
-
-[node name="Button Container" type="VBoxContainer" parent="."]
-anchors_preset = 8
-anchor_left = 0.5
-anchor_top = 0.5
-anchor_right = 0.5
-anchor_bottom = 0.5
-offset_left = -376.0
-offset_top = -144.0
-offset_right = 374.0
-offset_bottom = 156.0
-grow_horizontal = 2
-grow_vertical = 2
-alignment = 1
-
-[node name="Button" type="Button" parent="Button Container"]
-visible = false
-layout_mode = 2
-text = "A"
-
-[node name="Button2" type="Button" parent="Button Container"]
-visible = false
-layout_mode = 2
-text = "A"
+[node name="Speech Box" parent="." instance=ExtResource("5_5mqlt")]
