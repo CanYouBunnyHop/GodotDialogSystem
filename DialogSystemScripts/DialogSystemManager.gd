@@ -1,9 +1,11 @@
-class_name DialogSystemGlobalData extends Node
+class_name DialogSystemManager extends Node
 var data : Dictionary = {"a":false,"b":10,"name":"Nick"}
 var characterDataDict : Dictionary
 var dialogSystemDict : Dictionary
-
-var currentDialogSystem : DialogSystem
+var focusedSystem : DialogSystem
+signal sig_all_vis(visibility:bool)
+signal sig_interact_blocker
+#region constants
 #for avoiding typos, when adding a custom operator,
 #spaces aren't allowed, and suffix it with "="
 #BUG auto-complete when defining dictionary is not working
@@ -38,8 +40,6 @@ const validOpDict = {
 	TYPE_BOOL : ["=", "!="],
 	TYPE_STRING : ["=","+=", op.PREFIX, op.SUFFIX, op.PREFFIX_, op._SUFFIX],
 }
-var timer : SceneTreeTimer
-var interactReady : bool = true
 #NOTE not using expression due to it 
 #not supporting assignment and too restrictive
 var assignmentCallableDict : Dictionary = {
@@ -59,37 +59,40 @@ var assignmentCallableDict : Dictionary = {
 	op.PREFFIX_ : func(target, value): return value+" "+target,
 	op._SUFFIX : func(target, value): return target+" "+value,
 }
-func set_current_dialog_system(ID:String):
-	DialogSystem.signal_all_set_active.emit(false)
+#endregion
+
+var timer : SceneTreeTimer
+var interactReady : bool = true
+
+#NOTE PLAYING DIALOG AGAIN HERE WILL BREAK THE FLOW 
+# WHEN A SYSTEM IS ACTIVE FOR THE FIRST TIME
+func set_focus(ID:String):
 	if dialogSystemDict.has(ID):
-		var activeDS:DialogSystem = dialogSystemDict[ID]
-		activeDS.isActive = true
-		currentDialogSystem = activeDS 
-		#currentDialogSystem.visible = false
-		#currentDialogSystem = dialogSystemDict[ID]
-		#currentDialogSystem.visible = true
-		#currentDialogSystem.interacted()
+		focusedSystem = dialogSystemDict[ID]
+		focusedSystem.sig_focus.emit()
 	else: Console.debug_error("Invalid dialog system ID: %s"%[ID])
 
-#NOTE moved back to dialogSystem, 
-#maybe you want to have multiple active system?
-
-#func _unhandled_input(_event: InputEvent) -> void:
-	#var startCoolDown = func(duration : float):
-		#interactReady = false
-		#timer = get_tree().create_timer(duration, true, false, true)
-		#timer.timeout.connect(func(): interactReady = true)
-	#if Input.is_action_just_pressed("Interact") and interactReady:
-		#if currentDialogSystem == null: return #return if no dialog system is active
-		#currentDialogSystem.interacted()
-		##cooldown prevent accidental skipping when spamming Interact
-		#startCoolDown.call(0.1)
-
-#func _ready() -> void:
-	#var allDS:Array = dialogSystemDict.values()
-	#for ds in allDS: ds.visible = false
-	#currentDialogSystem.visible = true
-	
+#Unhandled input is blocked when clicking on guis
+func _unhandled_input(_event: InputEvent) -> void:
+	var startCoolDown = func(duration : float):
+		interactReady = false
+		timer = get_tree().create_timer(duration, true, false, true)
+		timer.timeout.connect(func(): interactReady = true)
+	if focusedSystem == null: return #return if no dialog system is active
+	#BELOW IS INTERACTION WITH THE DIALOG SYSTEM
+	if Input.is_action_just_pressed("Interact") and interactReady:
+		if sig_interact_blocker.get_connections().size() > 0:
+			sig_interact_blocker.emit()
+			return
+		focusedSystem.interacted()
+		startCoolDown.call(0.1)
+	#TESTING Read again
+	if Input.is_key_pressed(KEY_B) and interactReady:
+		if sig_interact_blocker.get_connections().size() > 0:
+			sig_interact_blocker.emit()
+			return
+		focusedSystem.interacted(true)
+		startCoolDown.call(0.1)
 #TBD may want to move this into set_data()
 func get_data(key : String, type: Variant.Type):
 	#var validTypes = validTypesDict.keys()

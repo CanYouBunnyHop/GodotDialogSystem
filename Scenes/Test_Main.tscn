@@ -5,14 +5,15 @@
 [ext_resource type="Script" path="res://Scenes/camTest.gd" id="3_j5am4"]
 [ext_resource type="Texture2D" uid="uid://bnxq5dre0llr6" path="res://icon.svg" id="4_axv4i"]
 
-[node name="ConversationManager" type="Node" node_paths=PackedStringArray("dialogSystems")]
+[node name="ConversationManager" type="Node"]
 script = ExtResource("1_7dhc1")
-dialogSystems = [NodePath("DialogSystemA"), NodePath("DialogSystemB")]
 
 [node name="DialogSystem_Stamp" parent="." instance=ExtResource("2_7kyi4")]
+visible = false
 dialogSystemID = "Stamp"
 
 [node name="DialogSystemA" parent="." instance=ExtResource("2_7kyi4")]
+visible = false
 dialogSystemID = "A"
 filePath = "res://txt files/FlagTestA.txt"
 

@@ -5,7 +5,6 @@ class_name SpeechBox extends Panel
 @export var settings : SpeechBoxSettings
 var readTween : Tween
 var lockBox : bool = false
-
 static var bbtagRegex :RegEx:
 	get:
 		if bbtagRegex != null: return bbtagRegex
@@ -18,7 +17,6 @@ static var stampRegex :RegEx:
 		stampRegex = RegEx.new()
 		stampRegex.compile(r'\*(?<Speed>(?:[0-9]*[.])?[0-9]+)?(?:D(?<Delay>([0-9]*[.])?[0-9]+))\*|\*(?<Speed2>(?&Speed))\*')
 		return stampRegex
-		
 func apply_font_setting(_text: String, _fontSetting: FontSettingsResource)->String:
 	var result = _text
 	result = MyUtil.apply_bbcode(result,"color" ,"="+_fontSetting.color.to_html())
@@ -43,11 +41,13 @@ func create_choice_button(_line : String):
 		for b in buttonContainer.get_children(): 
 			b.queue_free()
 			lockBox = false
-		dialogLabel.text = choiceText
-		#if !captures.boxB.is_empty(): #TODO we want this to be delayed for one line
-			#connect the box b commands to a queue, execute queue when next line is played
-		DialogSystem.signal_dequeue_cmd.connect(func():CmdListener.handle_input(captures.boxB), CONNECT_ONE_SHOT)
-			#CmdListener.handle_input(boxB) #connect cmds to button
+		dialogLabel.text = choiceText #choice check
+		#NOTE "jump:" command will skip the choice check, 
+		#because the cmd will execute immediately after 
+		#connect the box b commands to a signal, emit it when interacted
+		#NOTE DONT WANT TO BLOCK HERE DUE TO NOT ALL COMMANDS WILL JUMP POSITION 
+		#DSManager.sig_interact_blocker.connect(func():CmdListener.handle_input(captures.boxB), CONNECT_ONE_SHOT)
+		CmdListener.handle_input(captures.boxB) #connect cmds to button
 	lockBox = true
 	var constructInstruction = getInstruction.call()
 	var isDisabled = false #determines if button should be disabled
@@ -61,9 +61,8 @@ func create_choice_button(_line : String):
 	choiceButt.disabled = isDisabled
 	choiceButt.pressed.connect(buttonCommands)
 	pass
-	
 func display_dialogline(dialogLine: String, _name:String = "", _bbtag:String = ""):
-	var gChData = GlobalData.characterDataDict
+	var gChData = DSManager.characterDataDict
 	var curCharacterData : CharacterBaseResource
 	var bbname:String= _name
 	if !_name.is_empty():
@@ -75,8 +74,8 @@ func display_dialogline(dialogLine: String, _name:String = "", _bbtag:String = "
 		bbname = MyUtil.apply_bbcode(bbname+":","b")
 	#NOTE format after applyBB, so if data returned a duplicate name, dont apply same bb color
 	#example: {player_name} = "John" is not the same "John" in predefined name
-	var realBBName = bbname.format(GlobalData.data) 
-	var realDialogLine = dialogLine.format(GlobalData.data)
+	var realBBName = bbname.format(DSManager.data)
+	var realDialogLine = dialogLine.format(DSManager.data)
 	#seperate the dialog line with stamps
 	var lineSections : PackedStringArray #TBD refactor, using struct/2DArray
 	var speedList : Array[float] = [settings.readingSpeed]
@@ -118,8 +117,9 @@ func display_dialogline(dialogLine: String, _name:String = "", _bbtag:String = "
 	if readTween and readTween.is_running(): readTween.kill()
 	readTween = create_tween() #only create once, or else it will override
 	readTween.set_trans(Tween.TRANS_LINEAR)
+	#readTweenStarted.emit() #TBD
 	#get length of real name here, so bbcode won't be included
-	var realNameLength = _name.format(GlobalData.data).length() 
+	var realNameLength = _name.format(DSManager.data).length() 
 	var startPosition = realNameLength+1 #plus the ":" count
 	for i in range(0, lineSections.size()):
 		var sectionLength = lineSections[i].length()

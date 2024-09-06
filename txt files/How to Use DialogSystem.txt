@@ -1,28 +1,42 @@
-CharacterSpriteAtlas
-make sure each character is on the same row
+CharacterData / CharacterResource
+You can set character's name font settings,
+and character portrait via a sprite atlas (not working)
+However you have to preload the resources into
+DialogSystemManager's characterDataDict
 
 CommandListener
-singleton, takes in the current DialogSystem to read
+singleton, can listen to cmds in command boxes and execute them
 
-GlobalData
-singleton, holds variables used in conversation and command boxes
-
+DialogSystemManager
+singleton, 
+data, holds variables used in conversation and command boxes, any data
+created from a conversation will be store here
+focusedSystem, only a focused system can be interacted, only one system is allowed to be focused
+ 
 DialogSystem
 can take one conversation, you should use multiple instances for different conversation.
-Unless ur game is a pure visual novel.
 
-conversation
+SpeechBox
+this is where the text from DialogSystem will be displayed on
+can be changed into either UI or world space
+
+Conversation
 a txt file to be parsed into a DialogSystem
 
-flags
+Flags
 --<Flag>--
 flag remembers the position of the line in a conversation, using "jump:" command, you can either skip or 
 go back to that specified position
 
-command boxes
+Command Boxes
 (BoxA) <text> (BoxB)
 there are 2 command boxes, command in "BoxA" is executed before the text. 
-However it only takes in a Condition Container with one step, also an instruction
+However "BoxA" only takes in a Condition Container with one step, also an instruction
+Instruction is called when "BoxA" condition is false
+IMPORTANT () EMPTY BOXA IS TRUTHY, SO FOR EXAMPLE: ">(hide:)"
+IN THE EXAMPLE, THE BUTTON INSTRUCTION IS "hide:" WHICH HIDES THE CHOICE BUTTON
+BECAUSE THERE ARE CONTENTS IN BOXA, BOXA CONDITION IS FALSE, THE BUTTON WILL BE
+HIDDEN
 
 Dialog Lines
 (<condition>? <instruction>) <Name> : <dialog> [<BBTag>] (<command>)
@@ -37,20 +51,19 @@ format = you can use placeholder example,
 int and bool are also casted to string
 <[BBTag]> apply BBCode to the dialog, also allows parameters override, if multiple tags are inputted split them using ","
 "" default = if condition is false, the text and command boxB will be skipped over
+
 Stamps
 *<speed>D<delay>*
 <speed> = have a new reading speed 
 <delay> = add a delay before playing
 within the dialog you can place a stamp, this will determine the read speed and delay of the following text.
-
 for example:
 Time is ticking*5*... *0D1.5*BOOM
-stamp1 = *5*
-stamp2 = *0D1.5*
+In the example there are 2 stamps, stamp1 = *5*, stamp2 = *0D1.5*
 The text will play normally until it reaches a stamp. In stamp1, it changes the speed to 5.
-In stamp2, it changes the speed to 0, which will be instant, and it will be delayed by 1.5 seconds
+In stamp2, it changes the read speed to 0, which will be instant, and delayed by 1.5 seconds
 
-choices
+Choices
 > (BoxA) <text> (BoxB)
 > (<condition> ? <instruction>) <text> (<command>)
 choices are defined by ">" at the start of the line
@@ -81,20 +94,19 @@ ie:
 steps are seperated by ";", this tells the compiler to move on to the next condition
 if the previous condition has failed, without it, 
 the step will only read the first condition
-quirks
-usage of if and elif doesn't matter, they are treated the as same, 
+NOTE:
+usage of "if:" and "elif:" doesn't matter, they are treated the as same, 
 however "if:" is required to be at the start to be considered a valid container. 
 If you used 2 "if:" and both condition are true, 
 only the first "if:" will be called, as the loop has already exited.
 
-then command
-<then:> <target> <operator> <value>
+assignment command 
+#was called then command b4, some comments might still use the old name
+then: <target> <operator> <value>
 <target> = get global dictionary, if target doesn't exist, create one
-<operator> = (=|!=|+=|-=|*=|/=|prefix|suffix|prefix_|_suffix) "=" is universal, 
-			"!=" is for bool, "+=" is for int and string, 
-			rest of the assingment operatprs are for int
-			"prefix" and "suffix" are for string, they add either prefix or suffix
-			"prefix_" and "_suffix" are for string they add either prefix or suffix with" "in between
+<operator> = (=|!=|+=|-=|*=|/=|%=|prefix|suffix|prefix_|_suffix)
+"prefix" and "suffix" are for strings, they add either prefix or suffix
+"prefix_" and "_suffix" add prefix or suffix with a single empty space" "between
 <value> = update the target to that of the value
 ie:
 (then: %monsterIsAlive is false)
@@ -103,15 +115,14 @@ ie:
 ie:
 (then: %toggle != %toggle)
 "!=" is only implemented for toggle usage without the need for condition container
-quirk
-for numbers, only int are currently supported, when dividing, decimal places are truncated
-then dividing by 0
+IMPORTANT, DECIMALS ARE NOT SUPPORTED IN THIS COMMAND
 
 jump command
-<jump:> <flag|-> <DialogSystemID>
+jump: ID=<dsid> FLAG=<flag>
 jump to the specified flag, "-"
 flag "beginning" will return to the beginning of the conversation, 
 unless it is overidden
+
 
 emotion command #todo
 <emotion: <name> <emotion>
@@ -119,19 +130,19 @@ changes portrait sprite to the correct via dictionary in a character resource
 can be used to display character portrait without a name in dialog, or override
 the current portrait
 
-Command chain
+Command chain #THIS MIGHT BE REMOVE IN THE FUTURE
 command chain is seperated by ";" in a condition container
 use "," to seperate if the chain is not contained in a condition check
 this is useful when a single condition check is true and
 multiple commands needs to be executed.
 ie:
->buy potion (if: money >= 10 ? then: money -= 10 jump: flag_Buy ; else: then: backruptcy is true jump: flag_Broke)
+>buy potion (if: money >= 10 then: money -= 10 jump: flag_Buy ; else: then: backruptcy is true jump: flag_Broke)
 in this example, there are 2 command chain, both having a "then:" and "jump:" command.
 ie:
-(if a is true? then: a is false, then: b is true)
+(if a is true then: a is false, then: b is true)
 in this example, there are 2 command chain, 1st chain is part of a condition container, 
 2nd chain is outside of the condition container, seperated by ",". 2nd chain will always
-execute, since it's not contained in a condition container
+executed, since it's not contained in a condition container
 quirks 
 "then:" will be executed in order.
 "jump:" is always executed last, only the first "jump:" will be executed
@@ -144,11 +155,13 @@ ie:
 "custom:"
 
 important:
-ONLY NAME VARIABLES WITH a-z and A-Z AND PREFIX IT WITH "%", THIS IS TO PREVENT COMMANDLISTENER TO CONFUSE IT WITH INTERGER OR OTHER KEYWORDS
-Everything is case-sensitive, to avoid confusion, all the command inputs should be in lower-case,
+ONLY NAME VARIABLES WITH LETTERS AND "_" ALWAYS PREFIX IT WITH "%", 
+THIS IS TO PREVENT COMMANDLISTENER TO CONFUSE IT WITH INTERGER OR OTHER KEYWORDS
+Everything is case-sensitive, to avoid confusion, 
+all the command inputs should be in lower-case,
 except when you name variables
 you don't have to create variables first, if the variable doesn't exist, 
-"GlobalData" will create one automatically, depending on the operator or comparator, 
+"DialogSystemManager" will create one automatically, depending on the operator or comparator, 
 the default value will either be "0", "false" or ""
 There is only 3 types of Variable you can create dynamically via command, 
 and are currently supported, int, bool, string.

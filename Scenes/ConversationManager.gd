@@ -2,7 +2,8 @@ extends Node
 @export var dialogSystems : Array[DialogSystem]
 
 func _ready() -> void:
-	#GlobalData.currentDialogSystem = dialogSystems[0]
-	GlobalData.set_current_dialog_system("A")
-	#GlobalData.currentDialogSystem.signal_start_convo.emit()
+	var d: DialogSystem = DSManager.dialogSystemDict["A"]
+	DSManager.focusedSystem = d
+	d.sig_focus.emit()
+	d.sig_start_convo.emit()
 	pass

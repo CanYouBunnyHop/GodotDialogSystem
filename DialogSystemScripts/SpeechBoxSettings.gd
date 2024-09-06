@@ -35,7 +35,7 @@ func _ready() -> void:
 	speechBox.dialogLabel.add_theme_color_override("font_shadow_color", shadowColor)
 	speechBox.dialogLabel.add_theme_constant_override("shadow_offset_y", shadowOffset.y)
 	speechBox.dialogLabel.add_theme_constant_override("shadow_offset_x", shadowOffset.x)
-	GlobalData.characterDataDict = make_character_resource_dict()
+	DSManager.characterDataDict = make_character_resource_dict()
 #func _get_property_list():
 	#var properties:Array[Dictionary] = []
 	#properties.append_array([

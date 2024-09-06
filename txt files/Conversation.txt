@@ -1,12 +1,12 @@
-
+>(disable:)disabled button
+>button
+>(hide:)hidden button
 {name}: My name is {name}
 Jeff: This is part one *25D.5*this is part 2 *10D1*part three *0D3*BAM, this is instant
 Sam: This is line three
 Sam: This is line four
 Red: Testing
->(disable:)disabled button
->button
->(hide:)hidden button
+
 
 #()(then: %b = true)
 #()(if: %b <= 0 then: %c = 1 ; elif: %b <= 5 then: %c = 2 ; else: then: %c = 3)

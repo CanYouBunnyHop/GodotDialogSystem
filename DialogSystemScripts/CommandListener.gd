@@ -1,6 +1,4 @@
 class_name CommandListener extends Node
-var gdata : #TEST
-	get: return GlobalData.data
 var conditionWithTypeRegex = RegEx.new()
 var conditionPrefixRegex = RegEx.new() #TODO Use const dict instead
 var statementWithTypeRegex = RegEx.new()
@@ -29,7 +27,7 @@ func _ready():
 		read_condition_container),
 		Command.new("then:", "Updates variable or creates a new one if it doesn't exist", 
 		"then: <target> <operator> <value>", validate_command_chain),
-		Command.new("jump:", "jump to a flag in the conversation", "jump: <flag>", validate_command_chain),
+		Command.new("jump:", "jump to a flag in the conversation", "jump: ID=<dsid> FLAG=<flag>", validate_command_chain),
 		#Command.new("emotion:", "change current portrait to specified portrait","emotion: <name> <emotion>", 
 		#validate_command_chain),
 		Command.new("print:","","",func(_in : String):print("success")),
@@ -76,8 +74,8 @@ func get_expression_regex_returns(inRegexMatch : RegExMatch)-> CmdExpressionResu
 	var objectType = OBJ_TYPE.NULL
 	#things to return
 	var subjectInMatch : String = inRegexMatch.get_string(KEY.SUBJECT)
-	var subjectDatExist = GlobalData.data.has(subjectInMatch)
-	var finalSubject = GlobalData.data[subjectInMatch] if subjectDatExist else null
+	var subjectDatExist = DSManager.data.has(subjectInMatch)
+	var finalSubject = DSManager.data[subjectInMatch] if subjectDatExist else null
 	var operation = inRegexMatch.get_string(KEY.OPERATION)
 	var objectExist : bool
 	var finalObject = null
@@ -86,9 +84,9 @@ func get_expression_regex_returns(inRegexMatch : RegExMatch)-> CmdExpressionResu
 			objInMatch = inRegexMatch.get_string(key)
 			match key:
 				KEY.OBJ_DAT:
-					if GlobalData.data.has(objInMatch):
+					if DSManager.data.has(objInMatch):
 						objectType = OBJ_TYPE.DAT
-						finalObject = GlobalData.data[objInMatch]
+						finalObject = DSManager.data[objInMatch]
 				KEY.OBJ_INT:
 					objectType = OBJ_TYPE.INT
 					finalObject = int(objInMatch)
@@ -170,20 +168,26 @@ func read_condition_container(_arg:String):
 			CmdListener.handle_input(step)
 			break
 		else: Console.debug_error("Invalid Condition Container")
+#TBD MIGHT REMOVE COMMAND CHAINING ? 
+#THIS WILL BE HARD TO MAINTAIN WHEN MORE COMMANDS ARE AVAILABLE
 func validate_command_chain(input:String):
 	var thenCommands : Array[RegExMatch] = statementWithTypeRegex.search_all(input)
 	var jumpCommand : RegExMatch = jumpRegex.search(input)
 	#split out then: and jump: command
 	for tcmd in thenCommands:
-		var assgnmntCmdExResult : CmdExpressionResult = get_expression_regex_returns(tcmd)
-		var targetKey = assgnmntCmdExResult.subjectKey
-		var value = assgnmntCmdExResult.object
-		var operator = assgnmntCmdExResult.operation
-		GlobalData.set_data(targetKey, value, operator)
+		assignment_command(tcmd)
 	if jumpCommand == null: return
-	if jumpCommand.names.has("DSID"):
-		GlobalData.set_current_dialog_system(jumpCommand.get_string("DSID"))
-	if jumpCommand.names.has("Flag"):
-		jump_statement(jumpCommand.get_string("Flag"))
-func jump_statement(_flag : String = ""):
-	GlobalData.currentDialogSystem.signal_jump.emit(_flag)
+	DSManager.sig_interact_blocker.connect(func():jump_command(jumpCommand), CONNECT_ONE_SHOT)
+func assignment_command(tcmd : RegExMatch):
+	var assgnmntCmdExResult : CmdExpressionResult = get_expression_regex_returns(tcmd)
+	var targetKey = assgnmntCmdExResult.subjectKey
+	var value = assgnmntCmdExResult.object
+	var operator = assgnmntCmdExResult.operation
+	DSManager.set_data(targetKey, value, operator)
+func jump_command(jcmd : RegExMatch):
+	if jcmd.names.has("DSID"):
+		DSManager.set_focus(jcmd.get_string("DSID"))
+		
+	if jcmd.names.has("Flag"):
+		DSManager.focusedSystem.play_next_dialog(jcmd.get_string("Flag"))
+	else: DSManager.focusedSystem.play_next_dialog()

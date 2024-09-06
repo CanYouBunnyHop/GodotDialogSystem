@@ -44,14 +44,7 @@ func _init(_line:String) -> void:
 	name = no_group_return_empty.call(dialogLine,"Name")
 	dialog = no_group_return_empty.call(dialogLine,"Dialog")
 	bbtag =  no_group_return_empty.call(dialogLine,"BBTag")
-	
-#return { #TODO custom class or struct
-	#"isChoice":isChoice,
-	#"boxA":boxA, 
-	#"boxB":boxB,
-	#"boxACon":boxACon, 
-	#"full":full,
-	#"name":name_,
-	#"dialog":dialog, 
-	#"bbtag":bbtag, 
-	#}
+func is_displayable()->bool:
+	if boxACon == false or isChoice or full.is_empty():
+		return false
+	else: return true

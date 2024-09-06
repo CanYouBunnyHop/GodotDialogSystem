@@ -1,13 +1,17 @@
 extends Control
 #const dict = {ONE = "ass", TWO = 2}
-var reg = RegEx.new()
+#var reg = RegEx.new()
 #var dict = {
 	#ONE = func(stuff): print(stuff),
 #}
-@onready var interactCooldown = get_tree().create_timer(5, true, false, true)
+#@onready var interactCooldown = get_tree().create_timer(5, true, false, true)
+var array : Array = []
+var n := -1
+var t : bool = (func()->bool: return n >= array.size()-1).call()
 func _ready() -> void:
-	var t = reg.is_valid()
-	print(t)
+	array = [1,1,2]
+	if t==true:
+		print("is true")
 	#await interactCooldown.timeout
 	#print("Timeout")
 #region Tween testing Region
