@@ -1,10 +1,13 @@
-[gd_scene load_steps=8 format=3 uid="uid://6mxcaa0tr1by"]
+[gd_scene load_steps=12 format=3 uid="uid://6mxcaa0tr1by"]
 
 [ext_resource type="Script" path="res://DialogSystemScripts/SpeechBox.gd" id="1_fsqis"]
+[ext_resource type="AudioStream" uid="uid://cx4lsxbhc4r8y" path="res://Audio Files/ReadS.wav" id="2_gyupq"]
 [ext_resource type="Script" path="res://DialogSystemScripts/SpeechBoxSettings.gd" id="2_insbe"]
 [ext_resource type="Texture2D" uid="uid://c0fdqpws140qe" path="res://testPortrait.png" id="3_oh0vi"]
 [ext_resource type="Script" path="res://CustomBBTags/CustomBBTag_ghost.gd" id="4_08rj3"]
 [ext_resource type="Script" path="res://CustomBBTags/CustomBBTag_matrix.gd" id="5_dqwa4"]
+[ext_resource type="Script" path="res://DialogSystemScripts/DialogLabel.gd" id="6_bdj62"]
+[ext_resource type="Script" path="res://CustomBBTags/CustomBBTag_drunk.gd" id="7_2kst8"]
 
 [sub_resource type="RichTextEffect" id="RichTextEffect_pwlq5"]
 script = ExtResource("4_08rj3")
@@ -12,7 +15,10 @@ script = ExtResource("4_08rj3")
 [sub_resource type="RichTextEffect" id="RichTextEffect_dhnip"]
 script = ExtResource("5_dqwa4")
 
-[node name="Speech Box" type="Panel" node_paths=PackedStringArray("dialogLabel", "dialogPortrait", "buttonContainer", "settings")]
+[sub_resource type="RichTextEffect" id="RichTextEffect_h6ee8"]
+script = ExtResource("7_2kst8")
+
+[node name="Speech Box" type="Panel" node_paths=PackedStringArray("dialogLabel", "dialogPortrait", "buttonContainer", "settings", "audio")]
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
@@ -23,6 +29,11 @@ dialogLabel = NodePath("Dialog Label")
 dialogPortrait = NodePath("Dialog Portrait")
 buttonContainer = NodePath("Button Container")
 settings = NodePath("SpeechBoxSettings")
+audio = NodePath("SfxStreamPlayer")
+
+[node name="SfxStreamPlayer" type="AudioStreamPlayer" parent="."]
+stream = ExtResource("2_gyupq")
+bus = &"Sfx"
 
 [node name="SpeechBoxSettings" type="Node" parent="." node_paths=PackedStringArray("speechBox")]
 script = ExtResource("2_insbe")
@@ -53,10 +64,11 @@ theme_override_constants/outline_size = 1
 theme_override_constants/shadow_offset_y = 0
 theme_override_constants/shadow_offset_x = 0
 bbcode_enabled = true
-text = "[rs speed=25]standard reading speed can be very slow, this is quite a long line of text[/rs][rs speed=1000 delay=3], this part will be significantly faster[/rs]"
+text = "[drunk]standard reading speed can be very slow, this is quite a long line of text, this part will be significantly faster[/drunk]"
 scroll_active = false
 shortcut_keys_enabled = false
-custom_effects = [SubResource("RichTextEffect_pwlq5"), SubResource("RichTextEffect_dhnip")]
+custom_effects = [SubResource("RichTextEffect_pwlq5"), SubResource("RichTextEffect_dhnip"), SubResource("RichTextEffect_h6ee8")]
+script = ExtResource("6_bdj62")
 
 [node name="Button Container" type="VBoxContainer" parent="."]
 layout_mode = 1

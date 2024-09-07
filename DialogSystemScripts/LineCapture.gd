@@ -1,4 +1,4 @@
-class_name LineCapture #TODO convert to struct if available
+class_name LineCapture #TBD TODO convert to struct if available
 var isChoice : bool
 var boxA : String
 var boxB : String

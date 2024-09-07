@@ -1,8 +1,9 @@
 class_name SpeechBox extends Panel
-@export var dialogLabel : RichTextLabel
+@export var dialogLabel : DialogLabel
 @export var dialogPortrait : Sprite2D
 @export var buttonContainer : Container
 @export var settings : SpeechBoxSettings
+@export var audio : AudioStreamPlayer 
 var readTween : Tween
 var lockBox : bool = false
 static var bbtagRegex :RegEx:
@@ -17,6 +18,11 @@ static var stampRegex :RegEx:
 		stampRegex = RegEx.new()
 		stampRegex.compile(r'\*(?<Speed>(?:[0-9]*[.])?[0-9]+)?(?:D(?<Delay>([0-9]*[.])?[0-9]+))\*|\*(?<Speed2>(?&Speed))\*')
 		return stampRegex
+
+func _ready() -> void:
+	if audio == null: return
+	if audio.stream == null: return
+	dialogLabel.sig_visibleCharactersIncreased.connect(func():audio.play())
 func apply_font_setting(_text: String, _fontSetting: FontSettingsResource)->String:
 	var result = _text
 	result = MyUtil.apply_bbcode(result,"color" ,"="+_fontSetting.color.to_html())
@@ -110,14 +116,13 @@ func display_dialogline(dialogLine: String, _name:String = "", _bbtag:String = "
 			var tag = bbt.get_string("Tag")
 			var param = bbt.get_string("Param")
 			realBBDialogLine = MyUtil.apply_bbcode(realDialogLine, tag, param)
-	dialogLabel.visible_characters = 0
+	dialogLabel.ds_visibleCharacters = 0
 	var fullLine = realBBName + realBBDialogLine
 	dialogLabel.text = fullLine
 	#if previous tween is running, kill it, not nessasary, but just in case
 	if readTween and readTween.is_running(): readTween.kill()
 	readTween = create_tween() #only create once, or else it will override
 	readTween.set_trans(Tween.TRANS_LINEAR)
-	#readTweenStarted.emit() #TBD
 	#get length of real name here, so bbcode won't be included
 	var realNameLength = _name.format(DSManager.data).length() 
 	var startPosition = realNameLength+1 #plus the ":" count
@@ -131,7 +136,7 @@ func display_dialogline(dialogLine: String, _name:String = "", _bbtag:String = "
 		if speed != 0: delta = distance/speed
 		var delay = delayList[i]
 		readTween.chain().tween_interval(delay) #this will delay the tweener below
-		readTween.chain().tween_property(dialogLabel,"visible_characters", destination, delta).from(startPosition)
+		readTween.chain().tween_property(dialogLabel,"ds_visibleCharacters", destination, delta).from(startPosition)
 		startPosition = destination #this destination the next start position
 	
 	await readTween.finished #TEST

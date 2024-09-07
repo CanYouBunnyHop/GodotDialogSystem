@@ -5,13 +5,13 @@ extends Control
 	#ONE = func(stuff): print(stuff),
 #}
 #@onready var interactCooldown = get_tree().create_timer(5, true, false, true)
-var array : Array = []
-var n := -1
-var t : bool = (func()->bool: return n >= array.size()-1).call()
+@export var no : Noise
+@export var sprite : Sprite2D
+#@onready var array : Array = []
+#var n := -1
+#var t : bool = (func()->bool: return n >= array.size()-1).call()
 func _ready() -> void:
-	array = [1,1,2]
-	if t==true:
-		print("is true")
+	#MyUtil.perlin_shake2D(sprite, 3, 5, 5 )
 	#await interactCooldown.timeout
 	#print("Timeout")
 #region Tween testing Region
