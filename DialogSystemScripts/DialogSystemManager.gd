@@ -1,4 +1,5 @@
 class_name DialogSystemManager extends Node
+#NOTE This class is an autoload singleton called DSManager
 var data : Dictionary = {"a":false,"b":10,"name":"Nick"}
 var characterDataDict : Dictionary
 var dialogSystemDict : Dictionary
@@ -60,10 +61,8 @@ var assignmentCallableDict : Dictionary = {
 	op._SUFFIX : func(target, value): return target+" "+value,
 }
 #endregion
-
 var timer : SceneTreeTimer
 var interactReady : bool = true
-
 #NOTE PLAYING DIALOG AGAIN HERE WILL BREAK THE FLOW 
 # WHEN A SYSTEM IS ACTIVE FOR THE FIRST TIME
 func set_focus(ID:String):
@@ -71,7 +70,6 @@ func set_focus(ID:String):
 		focusedSystem = dialogSystemDict[ID]
 		focusedSystem.sig_focus.emit()
 	else: Console.debug_error("Invalid dialog system ID: %s"%[ID])
-
 #Unhandled input is blocked when clicking on guis
 func _unhandled_input(_event: InputEvent) -> void:
 	var startCoolDown = func(duration : float):
@@ -81,17 +79,11 @@ func _unhandled_input(_event: InputEvent) -> void:
 	if focusedSystem == null: return #return if no dialog system is active
 	#BELOW IS INTERACTION WITH THE DIALOG SYSTEM
 	if Input.is_action_just_pressed("Interact") and interactReady:
-		if sig_interact_blocker.get_connections().size() > 0:
-			sig_interact_blocker.emit()
-			return
-		focusedSystem.interacted()
+		focusedSystem.interact_play_next()
 		startCoolDown.call(0.1)
 	#TESTING Read again
 	if Input.is_key_pressed(KEY_B) and interactReady:
-		if sig_interact_blocker.get_connections().size() > 0:
-			sig_interact_blocker.emit()
-			return
-		focusedSystem.interacted(true)
+		focusedSystem.interact_play()
 		startCoolDown.call(0.1)
 #TBD may want to move this into set_data()
 func get_data(key : String, type: Variant.Type):
@@ -124,3 +116,6 @@ func set_data(targetKey : String, value, operator:String):
 	var assignmentCallable : Callable = assignmentCallableDict[operator]
 	var finalValue = assignmentCallable.call(target, value)
 	data[targetKey] = finalValue
+func end_conversation():
+	focusedSystem.visible = false
+	focusedSystem = null

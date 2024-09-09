@@ -45,6 +45,7 @@ func _ready():
 		dialogSystemID = str(get_instance_id())
 		Console.debug_warn("Dialog System ID is not found, Instance ID is used instead %s"%[dialogSystemID])
 	DSManager.dialogSystemDict[dialogSystemID] = self
+	
 	#Connect Signals
 	var begin = func():
 		currentLineIndex = -1
@@ -55,24 +56,8 @@ func _ready():
 		DSManager.sig_all_vis.emit(false) # every dialog systme is not visible
 		visible = true # but self visible is true
 	)
-	
 	Console.debug_log(get_system_info())
 	read_conversationFile(filePath)
-	
-#NOTE Input Handling moved to global data
-#func _unhandled_input(_event: InputEvent) -> void:
-	#var startCoolDown = func(duration : float):
-		#interactReady = false
-		#timer = get_tree().create_timer(duration, true, false, true)
-		#timer.timeout.connect(func(): interactReady = true)
-	#if Input.is_action_just_pressed("Interact") and interactReady:
-		#interacted()
-		#startCoolDown.call(0.1) #prevent accidental skipping when spamming Interact
-	#
-	##TESTING Read again
-	#if Input.is_key_pressed(KEY_B) and interactReady:
-		#interacted(true)
-		#startCoolDown.call(0.1)
 		
 func read_conversationFile(_filePath : String):
 	var f = FileAccess.open(_filePath, FileAccess.READ)
@@ -96,19 +81,21 @@ func get_line(_n = 0)->String:
 	var nline = currentLineIndex + _n
 	if nline >= currentConversation.size(): return ""
 	else: return currentConversation[nline].strip_edges()
-
-func interacted(_play_again : bool = false): #TODO TBD RENAME
-	#NOTE SIGNAL CMD DEQUEUE IS REMOVED, IF WANT RECHECK CHOICE, 
-	#USE JUMP AND FLAG, OR USE MANAGER
-	
+func interact_exit_early()-> bool:
 	#if still reading, stop reading, show full text instead
 	if speechBox.readTween and speechBox.readTween.is_running():
 		speechBox.readTween.kill()
 		speechBox.dialogLabel.visible_ratio = 1
-		return
-	if speechBox.lockBox: return #if choices appeared, next dialog won't be updated
-	if _play_again: play_dialog()
-	else: play_next_dialog()
+		return true
+	if DSManager.sig_interact_blocker.get_connections().size() > 0:
+		DSManager.sig_interact_blocker.emit()
+		return true
+	if speechBox.lockBox: return true #if choices appeared, next dialog won't be updated
+	return false
+func interact_play():
+	if interact_exit_early() == false: play_dialog()
+func interact_play_next():
+	if interact_exit_early() == false: play_next_dialog()
 func play_dialog():
 	#currentDisplayedLine is null, means the system has never been interacted, 
 	if lastDisplayableLine == null:
@@ -136,10 +123,14 @@ func play_next_dialog(_flagName : String = ""):
 		if snapshot.boxACon == false: continue
 		#if not a choice, boxa is true and full is empty
 		CmdListener.handle_input(snapshot.boxB)
-		#if dialog empty
-		if snapshot.is_displayable():
+		#if dialog is not empty \ if boxACon == false or isChoice or full.is_empty():
+		if not snapshot.full.is_empty():
 			lastDisplayableLine = snapshot
 			break
+		#if dialog is empty and blocker size > 0
+		elif DSManager.sig_interact_blocker.get_connections().size() > 0:
+			DSManager.sig_interact_blocker.emit()
+			return
 	print(str(currentLineIndex) + ":" + get_line()) #TEST
 	if snapshot.is_displayable(): play_dialog()
 	#display buttons, while currentline is a choice, loops
@@ -154,3 +145,4 @@ func play_next_dialog(_flagName : String = ""):
 		print(str(currentLineIndex) + ":" + get_line()) #TEST
 func end_conversation():
 	visible = false
+	if DSManager.focusedSystem == self: DSManager.focusedSystem = null

@@ -25,6 +25,7 @@ static func get_resources_from_dir(_dirPath : String) -> Array[Resource]:
 static func random_range_vector2(min : float, max : float) -> Vector2:
 	var rf = func()->float: return randf_range(min, max)
 	return Vector2(rf.call(),rf.call())
+	
 static func random_range_vector3(min : float, max : float) -> Vector3:
 	var rf = func()->float: return randf_range(min, max)
 	return Vector3(rf.call(),rf.call(),rf.call())

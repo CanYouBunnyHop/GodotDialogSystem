@@ -48,11 +48,6 @@ func create_choice_button(_line : String):
 			b.queue_free()
 			lockBox = false
 		dialogLabel.text = choiceText #choice check
-		#NOTE "jump:" command will skip the choice check, 
-		#because the cmd will execute immediately after 
-		#connect the box b commands to a signal, emit it when interacted
-		#NOTE DONT WANT TO BLOCK HERE DUE TO NOT ALL COMMANDS WILL JUMP POSITION 
-		#DSManager.sig_interact_blocker.connect(func():CmdListener.handle_input(captures.boxB), CONNECT_ONE_SHOT)
 		CmdListener.handle_input(captures.boxB) #connect cmds to button
 	lockBox = true
 	var constructInstruction = getInstruction.call()
@@ -71,13 +66,15 @@ func display_dialogline(dialogLine: String, _name:String = "", _bbtag:String = "
 	var gChData = DSManager.characterDataDict
 	var curCharacterData : CharacterBaseResource
 	var bbname:String= _name
-	if !_name.is_empty():
-		if gChData.has(_name) && gChData[_name] is CharacterBaseResource:
-			curCharacterData = gChData[_name]
-			bbname = apply_font_setting(bbname, curCharacterData.nameFontSettings)
-		else : #use default if characterBaseResource is not found
-			bbname = apply_font_setting(bbname, settings.defaultNameSettings)
-		bbname = MyUtil.apply_bbcode(bbname+":","b")
+	
+	if gChData.has(_name) && gChData[_name] is CharacterBaseResource:
+		curCharacterData = gChData[_name]
+		bbname = apply_font_setting(bbname, curCharacterData.nameFontSettings)
+	else : #use default if characterBaseResource is not found
+		bbname = apply_font_setting(bbname, settings.defaultNameSettings)
+		
+	if !_name.is_empty(): bbname = MyUtil.apply_bbcode(bbname+":","b")
+	
 	#NOTE format after applyBB, so if data returned a duplicate name, dont apply same bb color
 	#example: {player_name} = "John" is not the same "John" in predefined name
 	var realBBName = bbname.format(DSManager.data)
@@ -138,6 +135,5 @@ func display_dialogline(dialogLine: String, _name:String = "", _bbtag:String = "
 		readTween.chain().tween_interval(delay) #this will delay the tweener below
 		readTween.chain().tween_property(dialogLabel,"ds_visibleCharacters", destination, delta).from(startPosition)
 		startPosition = destination #this destination the next start position
-	
 	await readTween.finished #TEST
-	print(readTween.get_total_elapsed_time()) #TEST
+	print("tweenElapsedTime=", readTween.get_total_elapsed_time()) #TEST

@@ -30,6 +30,8 @@ func _ready():
 		Command.new("jump:", "jump to a flag in the conversation", "jump: ID=<dsid> FLAG=<flag>", validate_command_chain),
 		#Command.new("emotion:", "change current portrait to specified portrait","emotion: <name> <emotion>", 
 		#validate_command_chain),
+		Command.new("end:", "hide active dialog system and set focused dialog system to null", 
+		"end:", func(_nan):DSManager.sig_interact_blocker.connect(func():DSManager.end_conversation(), CONNECT_ONE_SHOT)),
 		Command.new("print:","","",func(_in : String):print("success")),
 		]
 	conditionPrefixRegex.compile(r'^(if:|elif:|else:)') #TODO use const dict
@@ -100,7 +102,6 @@ func get_expression_regex_returns(inRegexMatch : RegExMatch)-> CmdExpressionResu
 			objectExist = objectType != OBJ_TYPE.NULL
 			break
 	return CmdExpressionResult.new(subjectDatExist, subjectInMatch, finalSubject, operation, objectExist, finalObject)
-	
 func read_condition(step:String)-> bool:
 	var subConditionA = conditionWithTypeRegex.search(step)#conditionRegex.search(step)
 	if subConditionA == null:
@@ -178,6 +179,7 @@ func validate_command_chain(input:String):
 		assignment_command(tcmd)
 	if jumpCommand == null: return
 	DSManager.sig_interact_blocker.connect(func():jump_command(jumpCommand), CONNECT_ONE_SHOT)
+	
 func assignment_command(tcmd : RegExMatch):
 	var assgnmntCmdExResult : CmdExpressionResult = get_expression_regex_returns(tcmd)
 	var targetKey = assgnmntCmdExResult.subjectKey

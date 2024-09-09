@@ -89,5 +89,4 @@ texture = ExtResource("4_axv4i")
 
 [node name="MusicStreamPlayer" type="AudioStreamPlayer" parent="."]
 stream = ExtResource("5_7cdyh")
-autoplay = true
 bus = &"Music"

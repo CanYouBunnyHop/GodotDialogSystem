@@ -45,6 +45,5 @@ func _init(_line:String) -> void:
 	dialog = no_group_return_empty.call(dialogLine,"Dialog")
 	bbtag =  no_group_return_empty.call(dialogLine,"BBTag")
 func is_displayable()->bool:
-	if boxACon == false or isChoice or full.is_empty():
-		return false
+	if boxACon == false or isChoice or full.is_empty(): return false
 	else: return true

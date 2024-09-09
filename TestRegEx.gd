@@ -11,6 +11,8 @@ extends Control
 #var n := -1
 #var t : bool = (func()->bool: return n >= array.size()-1).call()
 func _ready() -> void:
+	#var callable = func(a = 0, b = true): print(a, b)
+	#var bind = callable.bind("this is").unbind(1).call(5, 6)
 	#MyUtil.perlin_shake2D(sprite, 3, 5, 5 )
 	#await interactCooldown.timeout
 	#print("Timeout")

@@ -1,11 +1,22 @@
 >(disable:)disabled button
 >button
+>end convo(end:)
 >(hide:)hidden button
+this line jumps to part2 (jump: FLAG=part2)
+
+--part1--
 {name}: My name is {name}
 Jeff: This is part one *25D.5*this is part 2 *10D1*part three *0D3*BAM, this is instant
 Sam: This is line three
 Sam: This is line four
 Red: Testing
+
+--part2--
+this is part2 test
+this is part2 and this ends 
+()(end:)
+this has alr ended dont show
+what about this
 
 
 #()(then: %b = true)
