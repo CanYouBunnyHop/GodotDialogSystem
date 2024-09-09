@@ -1,24 +1,20 @@
 class_name LineCapture #TBD TODO convert to struct if available
 var isChoice : bool
-var boxA : String
-var boxB : String
+var boxA : String #command box a
+var boxB : String #command box b
 var boxACon : bool
-var full : String
+var full : String #this is name + dialog + bbtag
 var name : String
 var dialog : String
 var bbtag : String
 
-static var commandCaptureRegex:RegEx:
+static var commandCaptureRegex:RegEx = RegEx.new():
 	get:
-		if commandCaptureRegex != null: return commandCaptureRegex
-		commandCaptureRegex = RegEx.new()
-		commandCaptureRegex.compile(r'^(?<Button>>\s*)?(?:\((?<BoxA>[^\(\)]*)\))?(?<Line>.*?)\s*(?:\((?!.*\()(?<BoxB>[^\(\)]*)\))?$')
+		if not commandCaptureRegex.is_valid(): commandCaptureRegex.compile(r'^(?<Button>>\s*)?(?:\((?<BoxA>[^\(\)]*)\))?(?<Line>.*?)\s*(?:\((?!.*\()(?<BoxB>[^\(\)]*)\))?$')
 		return commandCaptureRegex
-static var dialogCaptureRegex:RegEx:
+static var dialogCaptureRegex:RegEx = RegEx.new():
 	get:
-		if dialogCaptureRegex != null: return dialogCaptureRegex
-		dialogCaptureRegex = RegEx.new()
-		dialogCaptureRegex.compile(r'(?:^(?:(?<Name>.*):|)(?:(?<Dialog>.*?)))(\[(?!.*\[)(?<BBTag>.*)\]|)$')
+		if not dialogCaptureRegex.is_valid(): dialogCaptureRegex.compile(r'(?:^(?:(?<Name>.*):|)(?:(?<Dialog>.*?)))(\[(?!.*\[)(?<BBTag>.*)\]|)$')
 		return dialogCaptureRegex
 const INSTRUCT = {BUTTON_HIDE = "hide:", BUTTON_DISABLE = "disable:"}
 const BUTTON_INSTRUCTIONS = [INSTRUCT.BUTTON_HIDE, INSTRUCT.BUTTON_DISABLE]
@@ -44,6 +40,7 @@ func _init(_line:String) -> void:
 	name = no_group_return_empty.call(dialogLine,"Name")
 	dialog = no_group_return_empty.call(dialogLine,"Dialog")
 	bbtag =  no_group_return_empty.call(dialogLine,"BBTag")
+	
 func is_displayable()->bool:
 	if boxACon == false or isChoice or full.is_empty(): return false
 	else: return true

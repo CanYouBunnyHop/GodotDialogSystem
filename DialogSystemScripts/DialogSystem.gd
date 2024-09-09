@@ -7,33 +7,21 @@ var currentLineIndex :int = -1 :
 	set(value): currentLineIndex = clampi(value,-1, currentConversation.size()-1)
 var flagDict : Dictionary = {"beginning": 0}
 var currentConversation : Array[String] = []
-
+#TODO Signal Connections: Ensure signals are properly disconnected 
+#if the dialog system is removed or replaced, 
+#to avoid potential memory leaks or unintended behavior.
 signal sig_start_convo
 signal sig_focus
-#NOTE WARNING workaround to get a static signal without using a manager clss
-#static var dSManager :DialogSystem: 
-	#get: return dSManager if dSManager != null else new()
-#signal _DONT_USE_cmdQ
-#static var mSig_dequeue_cmd := Signal(dSManager._DONT_USE_cmdQ)
-#signal _DONT_USE_setVis(b:bool)
-#static var mSig_all_set_visible := Signal(dSManager._DONT_USE_setVis)
-#static var focusedSystem : DialogSystem
 
 ##[color=orange][b]WARNING[/b][/color]: do not use spaces and special characters other than "_"
 @export var dialogSystemID : String = ""
 @export_file("*.txt") var filePath:String
 @export var speechBox : SpeechBox: #TODO This may return error if speech box is not found
 	get: return speechBox if speechBox != null else $"Speech Box"
-static var flagRegex : RegEx:
+static var flagRegex : RegEx = RegEx.new():
 	get: 
-		if flagRegex != null: return flagRegex
-		flagRegex = RegEx.new()
-		flagRegex.compile(r'^--(?<Flag>\s*\w+\s*)--')
+		if not flagRegex.is_valid(): flagRegex.compile(r'^--(?<Flag>\s*\w+\s*)--')
 		return flagRegex
-#var readTween : Tween
-#var lockDialogBox : bool = false #NOTE when locked, dialog won't be updated, used for button prompt
-var timer:SceneTreeTimer
-var interactReady:bool = true
 var lastDisplayableLine : LineCapture
 
 func is_conversation_over()->bool: return currentLineIndex >= currentConversation.size()-1
@@ -57,8 +45,7 @@ func _ready():
 		visible = true # but self visible is true
 	)
 	Console.debug_log(get_system_info())
-	read_conversationFile(filePath)
-		
+	read_conversationFile(filePath)	
 func read_conversationFile(_filePath : String):
 	var f = FileAccess.open(_filePath, FileAccess.READ)
 	#return if file is not found
@@ -130,7 +117,7 @@ func play_next_dialog(_flagName : String = ""):
 		#if dialog is empty and blocker size > 0
 		elif DSManager.sig_interact_blocker.get_connections().size() > 0:
 			DSManager.sig_interact_blocker.emit()
-			return
+			return #WARNING RETURNING HERE MAY BREAK SOME FUTURE IMPLEMENTATION 
 	print(str(currentLineIndex) + ":" + get_line()) #TEST
 	if snapshot.is_displayable(): play_dialog()
 	#display buttons, while currentline is a choice, loops

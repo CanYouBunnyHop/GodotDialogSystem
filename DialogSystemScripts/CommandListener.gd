@@ -1,4 +1,5 @@
 class_name CommandListener extends Node
+#This is a Autoload singleton called CMDListener
 var conditionWithTypeRegex = RegEx.new()
 var conditionPrefixRegex = RegEx.new() #TODO Use const dict instead
 var statementWithTypeRegex = RegEx.new()
@@ -103,7 +104,7 @@ func get_expression_regex_returns(inRegexMatch : RegExMatch)-> CmdExpressionResu
 			break
 	return CmdExpressionResult.new(subjectDatExist, subjectInMatch, finalSubject, operation, objectExist, finalObject)
 func read_condition(step:String)-> bool:
-	var subConditionA = conditionWithTypeRegex.search(step)#conditionRegex.search(step)
+	var subConditionA = conditionWithTypeRegex.search(step)
 	if subConditionA == null:
 		Console.debug_error("CONDITION NOT FOUND: "+step)
 		return false
@@ -118,9 +119,7 @@ func read_condition(step:String)-> bool:
 		if not comCmdExResult.objectExist or not comCmdExResult.subjectExist: return false
 		var subject = comCmdExResult.subject
 		var object = comCmdExResult.object
-		#var subjectType = typeof(subject)
 		var comparator = comCmdExResult.operation
-		
 		var comparison := Expression.new()
 		comparison.parse("{0}{1}{2}".format([subject,comparator,object]))
 		var comparisonResult = comparison.execute()
@@ -129,8 +128,7 @@ func read_condition(step:String)-> bool:
 			var err = comparison.get_error_text()
 			Console.debug_error(err+" "+condition.get_string())
 			return false
-		else:
-			return comparisonResult
+		else: return comparisonResult
 	finalResults.append(subConditionResult.call(subConditionA))
 	match subConditionA.get_string("Keyword"):
 		"and":
@@ -179,7 +177,6 @@ func validate_command_chain(input:String):
 		assignment_command(tcmd)
 	if jumpCommand == null: return
 	DSManager.sig_interact_blocker.connect(func():jump_command(jumpCommand), CONNECT_ONE_SHOT)
-	
 func assignment_command(tcmd : RegExMatch):
 	var assgnmntCmdExResult : CmdExpressionResult = get_expression_regex_returns(tcmd)
 	var targetKey = assgnmntCmdExResult.subjectKey
@@ -189,7 +186,6 @@ func assignment_command(tcmd : RegExMatch):
 func jump_command(jcmd : RegExMatch):
 	if jcmd.names.has("DSID"):
 		DSManager.set_focus(jcmd.get_string("DSID"))
-		
 	if jcmd.names.has("Flag"):
 		DSManager.focusedSystem.play_next_dialog(jcmd.get_string("Flag"))
 	else: DSManager.focusedSystem.play_next_dialog()

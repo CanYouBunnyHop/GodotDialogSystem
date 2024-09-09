@@ -1,11 +1,11 @@
 class_name DialogSystemManager extends Node
 #NOTE This class is an autoload singleton called DSManager
 var data : Dictionary = {"a":false,"b":10,"name":"Nick"}
-var characterDataDict : Dictionary
-var dialogSystemDict : Dictionary
+var characterDataDict : Dictionary = {}
+var dialogSystemDict : Dictionary = {}
 var focusedSystem : DialogSystem
 signal sig_all_vis(visibility:bool)
-signal sig_interact_blocker
+signal sig_interact_blocker #WARNING SHOULD ONLY BE USED BY JUMP: OR END:
 #region constants
 #for avoiding typos, when adding a custom operator,
 #spaces aren't allowed, and suffix it with "="
@@ -20,7 +20,7 @@ const op = {
 	REMAINDER = "%=",
 	PREFIX = "prefix=",
 	SUFFIX = "suffix=",
-	PREFFIX_= "prefix_=",
+	PREFIX_= "prefix_=",
 	_SUFFIX= "_suffix=",
 }
 #this, along side with condition and statement regex 
@@ -39,7 +39,7 @@ const validTypeDefault = {
 const validOpDict = {
 	TYPE_INT : ["=", "+=", "-=", "*=", "/=", "%="],
 	TYPE_BOOL : ["=", "!="],
-	TYPE_STRING : ["=","+=", op.PREFIX, op.SUFFIX, op.PREFFIX_, op._SUFFIX],
+	TYPE_STRING : ["=","+=", op.PREFIX, op.SUFFIX, op.PREFIX_, op._SUFFIX],
 }
 #NOTE not using expression due to it 
 #not supporting assignment and too restrictive
@@ -57,7 +57,7 @@ var assignmentCallableDict : Dictionary = {
 		else: Console.debug_warn("tried to divide% by 0"),
 	op.PREFIX : func(target, value): return value + target,
 	op.SUFFIX : func(target, value): return target + value,
-	op.PREFFIX_ : func(target, value): return value+" "+target,
+	op.PREFIX_ : func(target, value): return value+" "+target,
 	op._SUFFIX : func(target, value): return target+" "+value,
 }
 #endregion
@@ -87,7 +87,6 @@ func _unhandled_input(_event: InputEvent) -> void:
 		startCoolDown.call(0.1)
 #TBD may want to move this into set_data()
 func get_data(key : String, type: Variant.Type):
-	#var validTypes = validTypesDict.keys()
 	#will override and create new var if type dont match
 	#if dont have key, or has key but type differs
 	if !data.has(key) or typeof(data[key]) != type: 

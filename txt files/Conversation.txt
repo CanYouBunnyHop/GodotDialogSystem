@@ -1,8 +1,8 @@
->(disable:)disabled button
->button
->end convo(end:)
->(hide:)hidden button
-this line jumps to part2 (jump: FLAG=part2)
+#>(disable:)disabled button
+#>button
+#>end convo(end:)
+#>(hide:)hidden button
+#this line jumps to part2 (jump: FLAG=part2)
 
 --part1--
 {name}: My name is {name}
