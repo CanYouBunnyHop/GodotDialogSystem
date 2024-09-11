@@ -7,10 +7,13 @@ extends Control
 #@onready var interactCooldown = get_tree().create_timer(5, true, false, true)
 @export var no : Noise
 @export var sprite : Sprite2D
+var ph = r'replace'
 #@onready var array : Array = []
 #var n := -1
 #var t : bool = (func()->bool: return n >= array.size()-1).call()
 func _ready() -> void:
+	var str = r'this is %s this is %s'%[ph,ph]
+	print(str)
 	#var callable = func(a = 0, b = true): print(a, b)
 	#var bind = callable.bind("this is").unbind(1).call(5, 6)
 	#MyUtil.perlin_shake2D(sprite, 3, 5, 5 )

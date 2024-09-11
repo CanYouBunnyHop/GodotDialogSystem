@@ -8,9 +8,10 @@ var name : String
 var dialog : String
 var bbtag : String
 
+const EXBOXCMD : String = r'[^\(\)]*'
 static var commandCaptureRegex:RegEx = RegEx.new():
 	get:
-		if not commandCaptureRegex.is_valid(): commandCaptureRegex.compile(r'^(?<Button>>\s*)?(?:\((?<BoxA>[^\(\)]*)\))?(?<Line>.*?)\s*(?:\((?!.*\()(?<BoxB>[^\(\)]*)\))?$')
+		if not commandCaptureRegex.is_valid(): commandCaptureRegex.compile(r'^(?<Button>>\s*)?(?:\((?<BoxA>{c})\))?(?<Line>.*?)\s*(?:\((?!.*\()(?<BoxB>{c})\))?$'.format({"c":EXBOXCMD}))
 		return commandCaptureRegex
 static var dialogCaptureRegex:RegEx = RegEx.new():
 	get:
@@ -20,7 +21,7 @@ const INSTRUCT = {BUTTON_HIDE = "hide:", BUTTON_DISABLE = "disable:"}
 const BUTTON_INSTRUCTIONS = [INSTRUCT.BUTTON_HIDE, INSTRUCT.BUTTON_DISABLE]
 
 func _init(_line:String) -> void:
-	var no_group_return_empty = func(rmatch : RegExMatch, group : String)-> String:
+	var no_group_return_empty= func(rmatch:RegExMatch, group:String)->String:
 		if rmatch.names.has(group): return rmatch.get_string(group)
 		else: return ""
 	var cmdMatch = commandCaptureRegex.search(_line)

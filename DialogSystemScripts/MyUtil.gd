@@ -5,6 +5,7 @@ static var bbregex:RegEx = RegEx.new():
 	get:
 		if not bbregex.is_valid(): bbregex.compile(r'\[.+?\]')
 		return bbregex
+		
 static func strip_bbcode(_text:String) -> String:
 	return bbregex.sub(_text, "", true)
 		

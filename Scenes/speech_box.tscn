@@ -4,8 +4,8 @@
 [ext_resource type="AudioStream" uid="uid://cx4lsxbhc4r8y" path="res://Audio Files/ReadS.wav" id="2_gyupq"]
 [ext_resource type="Script" path="res://DialogSystemScripts/SpeechBoxSettings.gd" id="2_insbe"]
 [ext_resource type="Texture2D" uid="uid://c0fdqpws140qe" path="res://testPortrait.png" id="3_oh0vi"]
-[ext_resource type="Script" path="res://CustomBBTags/CustomBBTag_ghost.gd" id="4_08rj3"]
-[ext_resource type="Script" path="res://CustomBBTags/CustomBBTag_matrix.gd" id="5_dqwa4"]
+[ext_resource type="Script" path="res://CustomBBTags/3rd party effects/CustomBBTag_ghost.gd" id="4_08rj3"]
+[ext_resource type="Script" path="res://CustomBBTags/3rd party effects/CustomBBTag_matrix.gd" id="5_dqwa4"]
 [ext_resource type="Script" path="res://DialogSystemScripts/DialogLabel.gd" id="6_bdj62"]
 [ext_resource type="Script" path="res://CustomBBTags/CustomBBTag_drunk.gd" id="7_2kst8"]
 
@@ -18,7 +18,7 @@ script = ExtResource("5_dqwa4")
 [sub_resource type="RichTextEffect" id="RichTextEffect_h6ee8"]
 script = ExtResource("7_2kst8")
 
-[node name="Speech Box" type="Panel" node_paths=PackedStringArray("dialogLabel", "dialogPortrait", "buttonContainer", "settings", "audio")]
+[node name="Speech Box" type="Panel" node_paths=PackedStringArray("dialogLabel", "buttonContainer", "settings", "audio")]
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
@@ -26,7 +26,6 @@ offset_top = 520.0
 mouse_filter = 1
 script = ExtResource("1_fsqis")
 dialogLabel = NodePath("Dialog Label")
-dialogPortrait = NodePath("Dialog Portrait")
 buttonContainer = NodePath("Button Container")
 settings = NodePath("SpeechBoxSettings")
 audio = NodePath("SfxStreamPlayer")
