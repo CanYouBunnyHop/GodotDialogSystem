@@ -1,7 +1,6 @@
-[gd_scene load_steps=12 format=3 uid="uid://6mxcaa0tr1by"]
+[gd_scene load_steps=11 format=3 uid="uid://6mxcaa0tr1by"]
 
 [ext_resource type="Script" path="res://DialogSystemScripts/SpeechBox.gd" id="1_fsqis"]
-[ext_resource type="AudioStream" uid="uid://cx4lsxbhc4r8y" path="res://Audio Files/ReadS.wav" id="2_gyupq"]
 [ext_resource type="Script" path="res://DialogSystemScripts/SpeechBoxSettings.gd" id="2_insbe"]
 [ext_resource type="Texture2D" uid="uid://c0fdqpws140qe" path="res://testPortrait.png" id="3_oh0vi"]
 [ext_resource type="Script" path="res://CustomBBTags/3rd party effects/CustomBBTag_ghost.gd" id="4_08rj3"]
@@ -31,7 +30,6 @@ settings = NodePath("SpeechBoxSettings")
 audio = NodePath("SfxStreamPlayer")
 
 [node name="SfxStreamPlayer" type="AudioStreamPlayer" parent="."]
-stream = ExtResource("2_gyupq")
 bus = &"Sfx"
 
 [node name="SpeechBoxSettings" type="Node" parent="." node_paths=PackedStringArray("speechBox")]

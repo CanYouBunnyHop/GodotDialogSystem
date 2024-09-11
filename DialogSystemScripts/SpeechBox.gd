@@ -3,7 +3,10 @@ class_name SpeechBox extends Panel
 @export var dialogPortrait : Sprite2D
 @export var buttonContainer : Container
 @export var settings : SpeechBoxSettings
-@export var audio : AudioStreamPlayer 
+@export var audio : AudioStreamPlayer:
+	get:
+		if audio.stream == null: audio.stream = load("res://Audio Files/ReadS.wav") 
+		return audio
 var readTween : Tween
 var lockBox : bool = false
 const EXFLOAT : String = r'[0-9]*[.])?[0-9]+'
