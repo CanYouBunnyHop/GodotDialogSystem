@@ -1,12 +1,22 @@
 class_name SpeechBox extends Panel
-@export var dialogLabel : DialogLabel #TODO TBD exception for null reference
+@export var dialogLabel : DialogLabel
 @export var dialogPortrait : Sprite2D
 @export var buttonContainer : Container
-@export var settings : SpeechBoxSettings
-@export var audio : AudioStreamPlayer:
+@export var stream :AudioStream = preload("res://Audio Files/ReadS.wav") 
+@onready var audio : AudioStreamPlayer = $SfxStreamPlayer: 
 	get:
-		if audio.stream == null: audio.stream = load("res://Audio Files/ReadS.wav") 
+		if audio.stream == null: audio.stream = stream
 		return audio
+@export_category("Font Settings")
+@export_group("Dialog Settings")
+@export var	readingSpeed : float = 20
+@export_group("Name Font Settings")
+@export var defaultNameSettings : FontSettingsResource = preload("res://DialogSystemScripts/Base Resources/DefaultFontSetting.tres")
+@export_group("Font Settings")
+@export var defaultFontSettings : FontSettingsResource = preload("res://DialogSystemScripts/Base Resources/DefaultFontSetting.tres")
+@export var shadowColor : Color = Color.BLACK
+@export var shadowOffset : Vector2i = Vector2i(0, 0)
+
 var readTween : Tween
 var lockBox : bool = false
 const EXFLOAT : String = r'[0-9]*[.])?[0-9]+'
@@ -20,9 +30,20 @@ static var stampRegex :RegEx = RegEx.new():
 		return stampRegex
 
 func _ready() -> void:
-	if audio == null: return
-	if audio.stream == null: return
-	dialogLabel.sig_visibleCharactersIncreased.connect(func():audio.play())
+	(func(): #init audioplayer
+		if audio == null or audio.stream == null: return
+		dialogLabel.sig_visibleCharactersIncreased.connect(func():audio.play())
+	).call()
+	#init font settings
+	if defaultFontSettings == null : defaultFontSettings = FontSettingsResource.new()
+	if defaultNameSettings == null : defaultNameSettings = FontSettingsResource.new()
+	dialogLabel.add_theme_color_override("default_color", defaultFontSettings.color)
+	dialogLabel.add_theme_color_override("font_outline_color", defaultFontSettings.outlineColor)
+	dialogLabel.add_theme_constant_override("outline_size", defaultFontSettings.outlineSize)
+	dialogLabel.add_theme_color_override("font_shadow_color", shadowColor)
+	dialogLabel.add_theme_constant_override("shadow_offset_y", shadowOffset.y)
+	dialogLabel.add_theme_constant_override("shadow_offset_x", shadowOffset.x)
+	
 func apply_font_setting(_text: String, _fontSetting: FontSettingsResource)->String:
 	var result = _text
 	result = MyUtil.apply_bbcode(result,"color" ,"="+_fontSetting.color.to_html())
@@ -69,7 +90,7 @@ class StampSectionData: #TODO TBD change to struct
 		self.section = _section
 		pass
 func get_stamp_section_datas(realDialogLine)-> Array[StampSectionData]:
-	var defaultStamp : StampSectionData = StampSectionData.new(settings.readingSpeed)
+	var defaultStamp : StampSectionData = StampSectionData.new(readingSpeed)
 	var stampSections : Array[StampSectionData] = [defaultStamp]
 	#if no stamp, update defaultStamp's section to realDialogLine
 	if stampRegex.search(realDialogLine) == null: stampSections.front().section = realDialogLine
@@ -79,7 +100,7 @@ func get_stamp_section_datas(realDialogLine)-> Array[StampSectionData]:
 		while stampRegex.search(curDialogSlice) != null:
 			var curStamp:RegExMatch = stampRegex.search(curDialogSlice)
 			var delay:float = curStamp.get_string("Delay").to_float() if curStamp.names.has("Delay") else 0.0
-			var speed:float = settings.readingSpeed
+			var speed:float = readingSpeed
 			for s in ["Speed", "Speed2"]:
 				if curStamp.names.has(s): speed = float(curStamp.get_string(s))
 			slices = curDialogSlice.split(curStamp.get_string(),true)
@@ -107,7 +128,7 @@ func read_animation(startPos:int, stmpSectDat:Array[StampSectionData]):
 		startPos = destination #this destination the next start position
 func display_dialogline(dialogLine: String, _name:String = "", _bbtag:String = ""):
 	var gChData = DSManager.characterDataDict
-	var bbname:String = apply_font_setting(_name, settings.defaultNameSettings)	
+	var bbname:String = apply_font_setting(_name, defaultNameSettings)	
 	if gChData.has(_name):
 		var curCharacterData : CharacterBaseResource = gChData[_name]
 		bbname= apply_font_setting(bbname, curCharacterData.nameFontSettings)

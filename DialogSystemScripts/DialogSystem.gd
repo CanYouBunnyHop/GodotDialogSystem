@@ -16,7 +16,10 @@ signal sig_focus
 ##[color=orange][b]WARNING[/b][/color]: do not use spaces and special characters other than "_"
 @export var dialogSystemID : String = ""
 @export_file("*.txt") var filePath:String
-@export var speechBox : SpeechBox: #TODO This may return error if speech box is not found
+
+#TODO This may return error if speech box is not found
+#NOTE not using static speech box, sometimes speechbox can have different settings
+@export var speechBox : SpeechBox : 
 	get: return speechBox if speechBox != null else $"Speech Box"
 static var flagRegex : RegEx = RegEx.new():
 	get: 

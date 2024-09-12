@@ -1,10 +1,11 @@
 class_name CommandListener extends Node
-#This is a Autoload singleton called CMDListener
+#NOTE This is a Autoload singleton called CMDListener
 var conditionWithTypeRegex = RegEx.new()
 var conditionPrefixRegex = RegEx.new() #TODO Use const dict instead
 var statementWithTypeRegex = RegEx.new()
 var jumpRegex = RegEx.new()
-var commandList : Array[Command]
+#NOTE not using dict, iterating array and checking if input begins with ID is easier
+var commandList : Array[Command] 
 func command_helper(input:String):
 	var splits:PackedStringArray = input.split(" ", false, 2)
 	if splits.size() == 1:
