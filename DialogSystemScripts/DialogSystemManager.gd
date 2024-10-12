@@ -4,6 +4,8 @@ var data : Dictionary = {"a":false,"b":10,"name":"Nick"}
 var characterDataDict : Dictionary = {}
 var dialogSystemDict : Dictionary = {}
 var focusedSystem : DialogSystem
+#var dialogHistory : Array[DialogData] = []
+#NOTE signals can disconect automatically when it's references are freed
 signal sig_all_vis(visibility:bool)
 signal sig_interact_blocker #WARNING SHOULD ONLY BE USED BY JUMP: OR END:
 #region constants

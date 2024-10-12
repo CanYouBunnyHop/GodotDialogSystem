@@ -28,7 +28,7 @@ static var flagRegex : RegEx = RegEx.new():
 var lastDisplayableLine : LineCapture
 
 func is_conversation_over()->bool: return currentLineIndex >= currentConversation.size()-1
-func get_system_info()->String:
+func get_system_info()->String: #DEBUG
 	return "DialogSystemID:{0}, readableLines = {1}\ncurrentLineIndex = {2}".format([dialogSystemID, currentConversation.size(), currentLineIndex])
 func _ready():
 	#NOTE Try adding self to dialog system dict using defined ID or Instance ID
@@ -36,18 +36,15 @@ func _ready():
 		dialogSystemID = str(get_instance_id())
 		Console.debug_warn("Dialog System ID is not found, Instance ID is used instead %s"%[dialogSystemID])
 	DSManager.dialogSystemDict[dialogSystemID] = self
-	
 	#Connect Signals
-	var begin = func():
+	sig_start_convo.connect(func():
 		currentLineIndex = -1
-		play_dialog()
-	sig_start_convo.connect(begin)
+		play_dialog())
 	DSManager.sig_all_vis.connect(func(b): visible = b)
 	sig_focus.connect(func(): 
 		DSManager.sig_all_vis.emit(false) # every dialog systme is not visible
-		visible = true # but self visible is true
-	)
-	Console.debug_log(get_system_info())
+		visible = true) # but self visible is true
+	Console.debug_log(get_system_info()) #DEBUG
 	read_conversationFile(filePath)	
 func read_conversationFile(_filePath : String):
 	var f = FileAccess.open(_filePath, FileAccess.READ)
@@ -113,7 +110,7 @@ func play_next_dialog(_flagName : String = ""):
 		if snapshot.boxACon == false: continue
 		#if not a choice, boxa is true and full is empty
 		CmdListener.handle_input(snapshot.boxB)
-		#if dialog is not empty \ if boxACon == false or isChoice or full.is_empty():
+		#if dialog is not empty
 		if not snapshot.full.is_empty():
 			lastDisplayableLine = snapshot
 			break

@@ -6,8 +6,9 @@
 [ext_resource type="Texture2D" uid="uid://bnxq5dre0llr6" path="res://icon.svg" id="4_axv4i"]
 [ext_resource type="AudioStream" uid="uid://d3vio34h7t8vu" path="res://Audio Files/gba1complete.mp3" id="5_7cdyh"]
 
-[node name="ConversationManager" type="Node"]
+[node name="ConversationManager" type="Node" node_paths=PackedStringArray("dialogSystems")]
 script = ExtResource("1_7dhc1")
+dialogSystems = [NodePath("DialogSystem_Stamp")]
 
 [node name="DialogSystem_Stamp" parent="." instance=ExtResource("2_7kyi4")]
 visible = false
